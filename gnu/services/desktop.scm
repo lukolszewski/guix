@@ -1078,11 +1078,11 @@ include the @command{udisksctl} command, part of UDisks, and GNOME Disks."
          (percent (string-append (non-negative-integer percent) "%"))))))
    ("RemoveIPC" (yesno elogind-remove-ipc?))
    "[Sleep]"
+   ("HandleNvidiaSleep" (yesno elogind-handle-nvidia-sleep?))
    ("SuspendState" (sleep-list elogind-suspend-state))
    ("SuspendMode" (sleep-list elogind-suspend-mode))
    ("HibernateState" (sleep-list elogind-hibernate-state))
    ("HibernateMode" (sleep-list elogind-hibernate-mode))
-   ("HandleNvidiaSleep" (yesno elogind-handle-nvidia-sleep?))
    ("HybridSleepState" (sleep-list elogind-hybrid-sleep-state))
    ("HybridSleepMode" (sleep-list elogind-hybrid-sleep-mode))))
 
