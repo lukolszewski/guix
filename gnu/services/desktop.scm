@@ -1004,6 +1004,8 @@ include the @command{udisksctl} command, part of UDisks, and GNOME Disks."
                                     (default '("platform" "shutdown")))
   (hybrid-sleep-state               elogind-hybrid-sleep-state
                                     (default '("disk")))
+  (handle-nvidia-sleep?             elogind-handle-nvidia-sleep?
+                                    (default #f))
   (hybrid-sleep-mode                elogind-hybrid-sleep-mode
                                     (default
                                       '("suspend" "platform" "shutdown"))))
@@ -1080,6 +1082,7 @@ include the @command{udisksctl} command, part of UDisks, and GNOME Disks."
    ("SuspendMode" (sleep-list elogind-suspend-mode))
    ("HibernateState" (sleep-list elogind-hibernate-state))
    ("HibernateMode" (sleep-list elogind-hibernate-mode))
+   ("HandleNvidiaSleep" (yesno elogind-handle-nvidia-sleep?))
    ("HybridSleepState" (sleep-list elogind-hybrid-sleep-state))
    ("HybridSleepMode" (sleep-list elogind-hybrid-sleep-mode))))
 
