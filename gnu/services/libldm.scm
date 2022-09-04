@@ -34,9 +34,10 @@
       (documentation "Run ldmtool to create Windows dynamic disc device nodes at startup")
       (provision '(libldmd))
       (one-shot? #t)
-      (start #~(make-system-constructor #$(program-file "ldmtool-action" (with-imported-modules (source-module-closure '((guix build utils))) #~(begin (use-modules (guix build utils)) (invoke (string-append #$libldm "/bin/ldmtool") #$@action))))))
-      (stop #~(make-kill-destructor))
-      ))))
+      (start (make-forkexec-constructor
+                     (list (string-append #$libldm "/bin/ldmtool")
+                           #$action)))
+      (stop #~(make-kill-destructor))))))
 
 (define libldm-service-type
  (service-type
