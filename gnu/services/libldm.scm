@@ -13,8 +13,8 @@
   #:use-module (gnu services shepherd)
   #:use-module (gnu packages libldm)
   #:export     (libldm-configuration
-	        libldm-configuration?
-	        libldm-service-type))
+                libldm-configuration?
+                libldm-service-type))
 
 
 (define-record-type* <libldm-configuration>
@@ -22,16 +22,16 @@
   make-libldm-configuration
   libldm-configuration?
   (package        libldm-configuration-package
-		  (default libldm))
+                  (default libldm))
   (action         libldm-configuration-action
-		  (default '("create" "all"))))
+                  (default '("create" "all"))))
 
 (define (libldm-shepherd-service config)
   "Return a <shepherd-service> for libldm with CONFIG"
   (let* ((libldm     (libldm-configuration-package config))
-	 (action     (libldm-configuration-action config)))
+         (action     (libldm-configuration-action config)))
     (list (shepherd-service
-      (documentation "Run ldmtool to create Windows dynamic disc device nodes at startup")
+      (documentation "Run ldmtool to create Windows dynamic disc device nodes at startup.  ")
       (provision '(libldmd))
       (one-shot? #t)
       (start #~(make-forkexec-constructor

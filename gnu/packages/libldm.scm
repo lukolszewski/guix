@@ -22,31 +22,41 @@
  (name "libldm")
  (version "0.2.5")
  (source (origin
-	  (method git-fetch)
-	  (uri (git-reference
-		(url "https://github.com/mdbooth/libldm.git")
-		(commit (string-append "libldm-" version))))
-	  (file-name (git-file-name name version))
-	  (sha256
-	   (base32
-	    "08iz3kq4ci79abpyxwwqmzi3bayyk4s29n8h1jqgdgk5yskwgnrn"))))
+          (method git-fetch)
+          (uri (git-reference
+                (url "https://github.com/mdbooth/libldm.git")
+                (commit (string-append "libldm-" version))))
+          (file-name (git-file-name name version))
+          (sha256
+           (base32
+            "08iz3kq4ci79abpyxwwqmzi3bayyk4s29n8h1jqgdgk5yskwgnrn"))))
  (build-system gnu-build-system)
- (inputs (list libtool m4 json-glib glib zlib readline lvm2 libgudev gtk-doc))
- (native-inputs (list which autoconf-wrapper automake pkg-config `(,glib "bin") gtk-doc libxml2 libxslt docbook-xsl))
+ (inputs (list json-glib glib zlib readline lvm2 libgudev))
+ (native-inputs (list which
+                      m4
+                      libtool
+                      autoconf-wrapper
+                      automake
+                      pkg-config
+                      `(,glib "bin")
+                      gtk-doc
+                      libxml2
+                      libxslt
+                      docbook-xsl))
  (arguments
   '(#:tests? #f
     #:parallel-build? #t
     #:phases (modify-phases %standard-phases
-			    (add-before 'configure 'set-env
-					(lambda _
-					  (setenv "CONFIG_SHELL" (which ""))#t))
-			    (add-before 'bootstrap 'run-gtkdocize
-					(lambda _
-					  (invoke "gtkdocize")))
-			    (replace 'bootstrap (lambda _ (invoke "autoreconf" "-fiv"))))))
+                            (add-before 'configure 'set-env
+                                        (lambda _
+                                          (setenv "CONFIG_SHELL" (which ""))#t))
+                            (add-before 'bootstrap 'run-gtkdocize
+                                        (lambda _
+                                          (invoke "gtkdocize")))
+                            (replace 'bootstrap (lambda _ (invoke "autoreconf" "-fiv"))))))
  (home-page "https://github.com/mdbooth/libldm")
- (synopsis "libldm is a tool and library for managing Microsoft Windows
-Dynamic Disks")
+ (synopsis "Libldm is a tool and library for managing Microsoft Windows
+dynamic disks.  ")
  (description
-  "libldm is a library for managing Microsoft Windows dynamic disks, which use Microsoft's LDM metadata. It can inspect them, and also create and remove device-mapper block devices which can be mounted.")
+  "Libldm is a library for managing Microsoft Windows dynamic disks, which use Microsoft's LDM metadata. It can inspect them, and also create and remove device-mapper block devices which can be mounted.  ")
  (license license:gpl3)) )
