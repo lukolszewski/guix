@@ -8,6 +8,7 @@
   #:use-module (ice-9 match)
   #:use-module (guix gexp)
   #:use-module (gnu services)
+  #:use-module (guix modules)
   #:use-module (gnu services base)
   #:use-module (gnu services shepherd)
   #:use-module (gnu packages libldm)
