@@ -34,7 +34,7 @@
       (documentation "Run ldmtool to create Windows dynamic disc device nodes at startup")
       (provision '(libldmd))
       (one-shot? #t)
-      (start (make-forkexec-constructor
+      (start #~(make-forkexec-constructor
                      (list (string-append #$libldm "/bin/ldmtool")
                            #$action)))
       (stop #~(make-kill-destructor))))))
