@@ -24,7 +24,7 @@
   (package        libldm-configuration-package
 		  (default libldm))
   (action         libldm-configuration-action
-		  (default "create all")))
+		  (default '("create" "all"))))
 
 (define (libldm-shepherd-service config)
   "Return a <shepherd-service> for libldm with CONFIG"
