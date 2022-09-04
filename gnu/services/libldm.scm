@@ -1,13 +1,18 @@
 (define-module (gnu services libldm)
-  #:use-module  (srfi srfi-1)
-  #:use-module  (ice-9 match)
-  #:use-module  (guix gexp)
-  #:use-module  (gnu services)
-  #:use-module  (gnu services base)
-  #:use-module  (gnu services shepherd)
-  #:export      (libldm-configuration
-		 libldm-configuration?
-		 libldm-service-type))
+  #:use-module (guix records)
+  #:use-module (guix gexp)
+  #:use-module (guix diagnostics)
+  #:use-module (guix i18n)
+  #:use-module (srfi srfi-1)
+  #:use-module (srfi srfi-26)
+  #:use-module (ice-9 match)
+  #:use-module (guix gexp)
+  #:use-module (gnu services)
+  #:use-module (gnu services base)
+  #:use-module (gnu services shepherd)
+  #:export     (libldm-configuration
+	        libldm-configuration?
+	        libldm-service-type))
 
 
 (define-record-type* <libldm-configuration>
