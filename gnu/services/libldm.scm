@@ -10,14 +10,14 @@
 		 libldm-service-type))
 
 
-(define libldm-service-type
- (service-type
-   (name 'libldm)
-   (extensions
-    (list (service-extension shepherd-root-service-type libldm-shepherd-service)))
-   (default-value (libldm-configuration))
-   (description
-    "Run ldmtool to create device nodes for Windows dynamic discs so they can be mounted")) )
+(define-record-type* <libldm-configuration>
+  libldm-configuration
+  make-libldm-configuration
+  libldm-configuration?
+  (package        libldm-configuration-package
+		  (default libldm))
+  (action         libldm-configuration-action
+		  (default "create all")))
 
 (define (libldm-shepherd-service config)
   "Return a <shepherd-service> for libldm with CONFIG"
@@ -31,11 +31,11 @@
       (stop #~(make-kill-destructor))
       ))))
 
-(define-record-type* <libldm-configuration>
-  libldm-configuration
-  make-libldm-configuration
-  libldm-configuration?
-  (package        libldm-configuration-package
-		  (default libldm))
-  (action         libldm-configuration-action
-		  (default "create all")))
+(define libldm-service-type
+ (service-type
+   (name 'libldm)
+   (extensions
+    (list (service-extension shepherd-root-service-type libldm-shepherd-service)))
+   (default-value (libldm-configuration))
+   (description
+    "Run ldmtool to create device nodes for Windows dynamic discs so they can be mounted")) )
