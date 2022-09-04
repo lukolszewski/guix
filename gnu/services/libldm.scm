@@ -31,7 +31,7 @@
   (let* ((libldm     (libldm-configuration-package config))
          (action     (libldm-configuration-action config)))
     (list (shepherd-service
-      (documentation "Run ldmtool to create Windows dynamic disc device nodes at startup.  ")
+      (documentation "Run ldmtool to create Windows dynamic disc device nodes at startup.")
       (provision '(libldmd))
       (one-shot? #t)
       (start #~(make-forkexec-constructor

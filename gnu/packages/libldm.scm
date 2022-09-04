@@ -55,8 +55,7 @@
                                           (invoke "gtkdocize")))
                             (replace 'bootstrap (lambda _ (invoke "autoreconf" "-fiv"))))))
  (home-page "https://github.com/mdbooth/libldm")
- (synopsis "Libldm is a tool and library for managing Microsoft Windows
-dynamic disks.  ")
+ (synopsis "Manager for Microsoft Windows dynamic disks.")
  (description
-  "Libldm is a library for managing Microsoft Windows dynamic disks, which use Microsoft's LDM metadata. It can inspect them, and also create and remove device-mapper block devices which can be mounted.  ")
+  "Libldm is a library for managing Microsoft Windows dynamic disks, which use Microsoft's LDM metadata.  It can inspect them, and also create and remove device-mapper block devices which can be mounted.")
  (license license:gpl3)) )
