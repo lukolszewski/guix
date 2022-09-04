@@ -1,4 +1,4 @@
-(define-module (gnu packages libldm))
+(define-module (gnu packages libldm)
   #:use-module (gnu packages)
   #:use-module (guix packages)
   #:use-module ((guix licenses) #:prefix license:)
