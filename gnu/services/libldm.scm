@@ -33,7 +33,7 @@
       (documentation "Run ldmtool to create Windows dynamic disc device nodes at startup")
       (provision '(libldmd))
       (one-shot? #t)
-      (start #~(apply make-system-constructor  (cons (string-append #$libldm "/bin/ldmtool")
+      (start #~(make-system-constructor  (string-append (string-append #$libldm "/bin/ldmtool")
                                                        #$action)))
       (stop #~(make-kill-destructor))
       ))))
