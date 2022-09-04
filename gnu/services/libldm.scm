@@ -37,7 +37,7 @@
       (start #~(make-forkexec-constructor
                 (append
                  (list (string-append #$libldm "/bin/ldmtool"))
-                 '("create" "all"))))
+                 (car #$action) (cdr #$action))))
       (stop #~(make-kill-destructor))))))
 
 (define libldm-service-type
