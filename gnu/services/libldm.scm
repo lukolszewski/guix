@@ -10,6 +10,7 @@
   #:use-module (gnu services)
   #:use-module (gnu services base)
   #:use-module (gnu services shepherd)
+  #:use-module (gnu packages libldm)
   #:export     (libldm-configuration
 	        libldm-configuration?
 	        libldm-service-type))
