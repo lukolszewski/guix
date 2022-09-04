@@ -35,9 +35,9 @@
       (provision '(libldmd))
       (one-shot? #t)
       (start #~(make-forkexec-constructor
-                     (list (string-append #$libldm "/bin/ldmtool")
-                           "create"
-                           "all")))
+                (append
+                 (list (string-append #$libldm "/bin/ldmtool"))
+                 #$action)))
       (stop #~(make-kill-destructor))))))
 
 (define libldm-service-type
