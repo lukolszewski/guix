@@ -3961,6 +3961,103 @@ This game is based on the GPL version of the famous game TuxRacer.")
     (home-page "https://sourceforge.net/projects/extremetuxracer/")
     (license license:gpl2+)))
 
+(define-public exult
+  (package
+    (name "exult")
+    (version "1.8")
+    (source
+     (origin
+       ;; The release tarball isn't bootstrapped, and Git is more robust (SWH).
+       (method git-fetch)
+       (uri (git-reference
+             (url "https://github.com/exult/exult")
+             (commit (string-append "v" version))))
+       (file-name (git-file-name name version))
+       (sha256
+        (base32 "1qfbkz05w8989vafc6dvw1wmdi1mvkr4kkgk3ccixadf4616kcb3"))))
+    (build-system gnu-build-system)
+    (outputs (list "out" "gimp" "studio"))
+    (arguments
+     (list #:configure-flags
+           #~(list "--enable-shared"
+                   "--disable-static"
+                   "--enable-lto"
+                   "--enable-exult-studio"
+                   "--enable-exult-studio-support"
+                   "--enable-compiler"
+                   "--enable-mods"      ; needs --enable-compiler!
+                   "--enable-gimp-plugin"
+                   ;; A few lines on stdout can save a lot of head-scratching:
+                   "CPPFLAGS=-DDEBUG_PATHS=1")
+           #:phases
+           #~(modify-phases %standard-phases
+               (add-before 'bootstrap 'patch-game-home-directory
+                 (lambda _
+                   (substitute* "gamemgr/modmgr.cc"
+                     ;; EXULT_DATADIR is in the store where it's rather hard for
+                     ;; users to put game assets.  Use a more writable home by
+                     ;; default, which users can override in their ~/.exult.cfg.
+                     (("<GAMEHOME>")
+                      (string-append "<HOME>/.local/share/exult"))
+                     ;; …however, this causes a regression: the mods which we'll
+                     ;; install to EXULT_DATADIR are no longer found.  So: don't
+                     ;; look for mods alongside the assets by default.  This too
+                     ;; can be overridden in users' ~/.exult.cfg.
+                     (("game_path( \\+ \"/mods\")" _ +suffix)
+                      (string-append "get_system_path(\"<GAMEHOME>/\") + "
+                                     "cfgname" +suffix)))))
+               (add-before 'bootstrap 'move-exult-studio
+                 (lambda* (#:key outputs #:allow-other-keys)
+                   (let ((out (assoc-ref outputs "studio")))
+                     (substitute* "mapedit/studio.cc"
+                       (("(esdir, )EXULT_DATADIR" _ prefix)
+                        (string-append prefix "\"" out "/share/exult\"")))
+                     (substitute* "data/Makefile.am"
+                       (("(estudionewdir =.*)\\$\\(datadir\\)(.*)"
+                         _ variable= suffix)
+                        (string-append variable= out "/share" suffix "\n"))))))
+               (add-before 'bootstrap 'fix-gimp-plug-in-prefix
+                 ;; ./configure will propagate this value to myriad Makefiles
+                 ;; scattered across the tree, so fix it early.
+                 (lambda* (#:key outputs #:allow-other-keys)
+                   (let ((out (assoc-ref outputs "gimp")))
+                     (substitute* "configure.ac"
+                       (("(GIMP_PLUGIN_PREFIX=).*" _ variable=)
+                        (string-append variable= out "/lib/gimp/2.0"))))))
+               (add-after 'install 'move-exult_studio
+                 (lambda* (#:key outputs #:allow-other-keys)
+                   (let ((source (assoc-ref outputs "out"))
+                         (target (assoc-ref outputs "studio"))
+                         (file   "/bin/exult_studio"))
+                     (mkdir-p (string-append target (dirname file)))
+                     (rename-file (string-append source file)
+                                  (string-append target file))))))))
+    (native-inputs
+     (list autoconf automake libtool pkg-config
+           ;; The following are needed only by the GIMP plug-in.
+           gimp libjpeg-turbo
+           gegl gtk+-2                  ; needed by gimpui-2.0.pc
+           ;; The following are needed only by the Usecode compiler.
+           bison flex))
+    (inputs
+     (list fluidsynth freetype libvorbis sdl2
+           ;; GTK is needed only by Exult Studio.
+           gtk+))
+    (synopsis "Role-playing game engine compatible with Ultima VII")
+    (description
+     "Exult is an Ultima 7 game engine that runs on modern operating systems.
+Ultima 7 (or Ultima VII) is a two-part @acronym{RPG, role-playing game} from the
+early 1990s.
+
+Exult is fully compatible with the original Ultima 7, but doesn't require any
+of its data files to be useful.  Explore entirely new game worlds---or create
+your own with the included game and map editor, Exult Studio.
+
+This package expects the game(s) to be placed in subdirectories of
+@file{~/.local/share/exult}.")
+    (home-page "http://exult.info/")
+    (license license:gpl2+)))
+
 (define-public supertuxkart
   (package
     (name "supertuxkart")
@@ -11072,3 +11169,39 @@ principle of prioritizing the guests' happiness with a well-maintained park.
 Should they go unwise, a theme park plunge into chaos with vandalizing guests
 and unsafe rides.  Which path will you take?")
     (license license:gpl2)))
+
+(define-public steam-devices-udev-rules
+  ;; Last release from 2019-04-10
+  (let ((commit "d87ef558408c5e7a1a793d738db4c9dc2cb5f8fa")
+        (revision "0"))
+    (package
+      (name "steam-devices-udev-rules")
+      (version (git-version "1.0.0.61" revision commit))
+      (source (origin
+                (method git-fetch)
+                (uri (git-reference
+                      (url "https://github.com/ValveSoftware/steam-devices")
+                      (commit commit)))
+                (file-name (git-file-name name version))
+                (sha256
+                 (base32
+                  "1yqigraz9f19018ma5n2pbx7naadh9960lia3z8ayg7vz1fjdl54"))))
+      (build-system copy-build-system)
+      (arguments
+       '(#:install-plan '(("./" "lib/udev/rules.d"
+                           #:include-regexp ("rules$")))
+         #:phases (modify-phases %standard-phases
+                    (add-after 'unpack 'patch-paths
+                      (lambda* (#:key inputs #:allow-other-keys)
+                        (substitute* "60-steam-input.rules"
+                          (("/bin/sh")
+                           (search-input-file inputs "/bin/sh"))
+                          (("udevadm")
+                           (search-input-file inputs "/bin/udevadm"))))))))
+      (inputs (list eudev))
+      (home-page "https://github.com/ValveSoftware/steam-devices")
+      (synopsis "udev rules for game controllers and virtual reality devices")
+      (description
+       "This package provides a set of udev rules for game controllers and
+virtual reality devices.")
+      (license license:expat))))

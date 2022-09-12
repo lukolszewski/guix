@@ -17,6 +17,7 @@
 ;;; Copyright © 2021 Nicolas Graves <ngraves@ngraves.fr>
 ;;; Copyright © 2022 Aleksandr Vityazev <avityazev@posteo.org>
 ;;; Copyright © 2022 Gabriel Arazas <foo.dogsquared@gmail.com>
+;;; Copyright © 2022 Ricardo Wurmus <rekado@elephly.net>
 ;;;
 ;;; This file is part of GNU Guix.
 ;;;
@@ -874,6 +875,36 @@ rebase.")
     (native-inputs
      (list python-cython))))
 
+(define-public rust-cbindgen-0.17
+  (package
+    (inherit rust-cbindgen)
+    (name "rust-cbindgen")
+    (version "0.17.0")
+    (source (origin
+              (method url-fetch)
+              (uri (crate-uri "cbindgen" version))
+              (file-name (string-append name "-" version ".tar.gz"))
+              (sha256
+               (base32
+                "1f40hxj6h7wqmsj8dzxjm3m421hjqpz2m5zxasbn8kgnr6scykvl"))))
+    (arguments
+     `(#:cargo-inputs
+       (("rust-clap" ,rust-clap-2)
+        ("rust-heck" ,rust-heck-0.3)
+        ("rust-indexmap" ,rust-indexmap-1)
+        ("rust-log" ,rust-log-0.4)
+        ("rust-proc-macro2" ,rust-proc-macro2-1)
+        ("rust-quote" ,rust-quote-1)
+        ("rust-serde" ,rust-serde-1)
+        ("rust-serde-json" ,rust-serde-json-1)
+        ("rust-syn" ,rust-syn-1)
+        ("rust-tempfile" ,rust-tempfile-3)
+        ("rust-toml" ,rust-toml-0.5))
+       #:cargo-development-inputs
+       (("rust-serial-test" ,rust-serial-test-0.5))))
+    (native-inputs
+     (list python-cython))))
+
 (define-public rust-cbindgen-0.16
   (package
     (inherit rust-cbindgen)
@@ -1628,7 +1659,7 @@ support for Rust.")
     (native-inputs
      (list pkg-config))
     (inputs
-     (list curl libgit2-1.3 libssh2 openssl zlib))
+     (list curl libgit2-1.3 libssh2 openssl-1.1 zlib))
     (home-page "https://github.com/lu-zero/cargo-c")
     (synopsis "Build and install C-compatible libraries")
     (description

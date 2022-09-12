@@ -93,6 +93,7 @@
             nginx-configuration
             nginx-configuration?
             nginx-configuration-nginx
+            nginx-configuration-shepherd-requirement
             nginx-configuration-log-directory
             nginx-configuration-run-directory
             nginx-configuration-server-blocks
@@ -556,6 +557,8 @@
   nginx-configuration?
   (nginx         nginx-configuration-nginx          ;file-like
                  (default nginx))
+  (shepherd-requirement nginx-configuration-shepherd-requirement
+                        (default '()))              ;list of symbols
   (log-directory nginx-configuration-log-directory  ;string
                  (default "/var/log/nginx"))
   (run-directory nginx-configuration-run-directory  ;string
@@ -779,7 +782,7 @@ of index files."
 (define (nginx-shepherd-service config)
   (match-record config
                 <nginx-configuration>
-                (nginx file run-directory)
+                (nginx file run-directory shepherd-requirement)
    (let* ((nginx-binary (file-append nginx "/sbin/nginx"))
           (pid-file (in-vicinity run-directory "pid"))
           (nginx-action
@@ -803,7 +806,7 @@ of index files."
      (list (shepherd-service
             (provision '(nginx))
             (documentation "Run the nginx daemon.")
-            (requirement '(user-processes loopback))
+            (requirement `(user-processes loopback ,@shepherd-requirement))
             (modules `((ice-9 match)
                        ,@%default-modules))
             (start (nginx-action "-p" run-directory))
@@ -1390,7 +1393,7 @@ files.")
   (replacement       anonip-configuration-replacement  ;string
                      (default #f))
   (ipv4mask          anonip-configuration-ipv4mask     ;number
-                     (default #f)) 
+                     (default #f))
   (ipv6mask          anonip-configuration-ipv6mask     ;number
                      (default #f))
   (increment         anonip-configuration-increment    ;number
@@ -1422,35 +1425,41 @@ files.")
                          (format #false "~a=~a"
                                  option value))))
                (list)))))
-    (list (shepherd-service
-           (provision (list (symbol-append 'anonip- (string->symbol output))))
-           (requirement '(user-processes))
-           (documentation "Anonimyze the given log file location with anonip.")
-           (start #~(lambda _
-                      (unless (file-exists? #$input)
-                          (mknod #$input 'fifo #o600 0))
-                      (let ((pid (fork+exec-command
-                                  (append
-                                      (list #$(file-append (anonip-configuration-anonip config)
-                                                           "/bin/anonip")
-                                            (string-append "--input=" #$input)
-                                            (string-append "--output=" #$output))
-                                      (if #$(anonip-configuration-skip-private? config)
-                                          '("--skip-private") (list))
-                                    '#$(optional anonip-configuration-column "--column")
-                                    '#$(optional anonip-configuration-ipv4mask "--ipv4mask")
-                                    '#$(optional anonip-configuration-ipv6mask "--ipv6mask")
-                                    '#$(optional anonip-configuration-increment "--increment")
-                                    '#$(optional anonip-configuration-replacement "--replacement")
-                                    '#$(optional anonip-configuration-delimiter "--delimiter")
-                                    '#$(optional anonip-configuration-regex "--regex"))
-                                  ;; Run in a UTF-8 locale
-                                  #:environment-variables
-                                  (list (string-append "GUIX_LOCPATH=" #$glibc-utf8-locales
-                                                       "/lib/locale")
-                                        "LC_ALL=en_US.utf8"))))
-                        pid)))
-           (stop #~(make-kill-destructor))))))
+    (list
+     (shepherd-service
+      (provision
+       (list (symbol-append 'anonip- (string->symbol output))))
+      (requirement '(user-processes))
+      (documentation
+       "Anonimyze the given log file location with anonip.")
+      (start
+       #~(lambda _
+           (unless (file-exists? #$input)
+             (mknod #$input 'fifo #o600 0))
+           (let ((pid
+                  (fork+exec-command
+                   (append
+                    (list #$(file-append (anonip-configuration-anonip config)
+                                         "/bin/anonip")
+                          (string-append "--input=" #$input)
+                          (string-append "--output=" #$output))
+                    (if #$(anonip-configuration-skip-private? config)
+                        '("--skip-private") (list))
+                    '#$(optional anonip-configuration-column "--column")
+                    '#$(optional anonip-configuration-ipv4mask "--ipv4mask")
+                    '#$(optional anonip-configuration-ipv6mask "--ipv6mask")
+                    '#$(optional anonip-configuration-increment "--increment")
+                    '#$(optional anonip-configuration-replacement
+                                 "--replacement")
+                    '#$(optional anonip-configuration-delimiter "--delimiter")
+                    '#$(optional anonip-configuration-regex "--regex"))
+                   ;; Run in a UTF-8 locale
+                   #:environment-variables
+                   (list (string-append "GUIX_LOCPATH=" #$glibc-utf8-locales
+                                        "/lib/locale")
+                         "LC_ALL=en_US.utf8"))))
+             pid)))
+      (stop #~(make-kill-destructor))))))
 
 (define anonip-service-type
   (service-type

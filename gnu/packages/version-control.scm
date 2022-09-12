@@ -221,14 +221,14 @@ Python 3.3 and later, rather than on Python 2.")
 (define-public git
   (package
    (name "git")
-   (version "2.37.2")
+   (version "2.37.3")
    (source (origin
             (method url-fetch)
             (uri (string-append "mirror://kernel.org/software/scm/git/git-"
                                 version ".tar.xz"))
             (sha256
              (base32
-              "00xhdm086bxm4v2p8m7ra7vf9kwdppw4l2n3vakfff253j19qg8w"))))
+              "0yp8hdj0w18jhmmdflzz74z418cw95i08pc22yycyn8nyvbl2il1"))))
    (build-system gnu-build-system)
    (native-inputs
     `(("native-perl" ,perl)
@@ -248,7 +248,7 @@ Python 3.3 and later, rather than on Python 2.")
                 version ".tar.xz"))
           (sha256
            (base32
-            "1zhn91fzyyz890a5hm0bvs0vnhy8c81q1fhsk2gfwbbh73z161nz"))))
+            "053lj9wy8y2yr5jzpb0af4w50gz3ckhgc15wqx7is4z6k9a76lww"))))
       ;; For subtree documentation.
       ("asciidoc" ,asciidoc)
       ("docbook-xsl" ,docbook-xsl)
@@ -1572,7 +1572,7 @@ also walk each side of a merge and test those changes individually.")
                       (let ((out (assoc-ref outputs "out"))
                             (coreutils (assoc-ref inputs "coreutils"))
                             (findutils (assoc-ref inputs "findutils"))
-                            (git (assoc-ref inputs "git-minimal")))
+                            (git (assoc-ref inputs "git")))
                         (for-each (lambda (file-name)
                                     (wrap-program (string-append out file-name)
                                       `("PATH" ":" prefix
@@ -1581,7 +1581,7 @@ also walk each side of a merge and test those changes individually.")
                                               (list out coreutils findutils git)))))
                                   '("/bin/gitolite" "/bin/gitolite-shell"))))))))
     (inputs
-     (list bash-minimal coreutils findutils git-minimal inetutils openssh perl))
+     (list bash-minimal coreutils findutils git inetutils openssh perl))
     (home-page "https://gitolite.com")
     (synopsis "Git access control layer")
     (description
@@ -1736,7 +1736,7 @@ execution of any hook written in any language before every commit.")
 (define-public mercurial
   (package
     (name "mercurial")
-    (version "6.2.1")
+    (version "6.2.2")
     (source (origin
              (method url-fetch)
              (uri (string-append "https://www.mercurial-scm.org/"
@@ -1745,7 +1745,14 @@ execution of any hook written in any language before every commit.")
                                       "mercurial-openssl-compat.patch"))
              (sha256
               (base32
-               "1nl2726szaxyrxlyssrsir5c6vb4ci0i6g969i6xaahw1nidgica"))))
+               "1pr00hdk3l9095fhq6302fgj0wmbqhqs93y4r457ba4pyjjrvyly"))
+             (modules '((guix build utils)))
+             (snippet
+              '(substitute* (find-files "tests" "\\.(t|sh)$")
+                 ;; grep 3.8 emits deprecation warnings for 'egrep' and
+                 ;; 'fgrep' which breaks expected test output.
+                 (("egrep") "grep -E")
+                 (("fgrep") "grep -F")))))
     (build-system gnu-build-system)
     (arguments
      `(#:make-flags
@@ -2847,14 +2854,14 @@ specific files and directories.")
 (define-public src
   (package
     (name "src")
-    (version "1.18")
+    (version "1.29")
     (source (origin
               (method url-fetch)
               (uri (string-append
                     "http://www.catb.org/~esr/src/src-" version ".tar.gz"))
               (sha256
                (base32
-                "0n0skhvya8w2az45h2gsafxy8m2mvqas64nrgxifcmrzfv0rf26c"))))
+                "0ha287gc95vz6bdvn42pi3qibc56h1w5dshsvjvdn2zd283amksd"))))
     (build-system gnu-build-system)
     (arguments
      '(#:make-flags
@@ -2880,7 +2887,8 @@ specific files and directories.")
      ;; For testing.
      (list git perl))
     (inputs
-     `(("python" ,python-wrapper)
+     `(("cssc" ,cssc)
+       ("python" ,python-wrapper)
        ("rcs" ,rcs)))
     (synopsis "Simple revision control")
     (home-page "http://www.catb.org/~esr/src/")

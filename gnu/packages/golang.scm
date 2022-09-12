@@ -2923,6 +2923,28 @@ loading algorithms.")
 is similar to Go's standard library @code{json} and @code{xml} package.")
     (license license:expat)))
 
+(define-public go-github-com-goccy-go-json
+  (package
+    (name "go-github-com-goccy-go-json")
+    (version "0.9.10")
+    (source
+     (origin
+       (method git-fetch)
+       (uri (git-reference
+             (url "https://github.com/goccy/go-json")
+             (commit (string-append "v" version))))
+       (file-name (git-file-name name version))
+       (sha256
+        (base32 "1bg8p4c6r8r0kixdxv2m8xmdsmb1zl5sd8czswpccldjk3c358wp"))))
+    (build-system go-build-system)
+    (arguments
+     '(#:import-path "github.com/goccy/go-json"))
+    (home-page "https://github.com/goccy/go-json")
+    (synopsis "JSON encoder/decoder in Go")
+    (description
+     "Fast JSON encoder/decoder compatible with encoding/json for Go.")
+    (license license:expat)))
+
 (define-public go-github-com-getsentry-raven-go
   (let ((commit "5c24d5110e0e198d9ae16f1f3465366085001d92")
         (revision "0"))
@@ -9969,3 +9991,32 @@ implementation.")
     (description
      "Package jsonrpc2 provides a Go implementation of JSON-RPC 2.0.")
     (license license:expat)))
+
+(define-public go-github-com-disintegration-imaging
+  (package
+    (name "go-github-com-disintegration-imaging")
+    (version "1.6.2")
+    (source (origin
+              (method git-fetch)
+              (uri (git-reference
+                    (url "https://github.com/disintegration/imaging")
+                    (commit (string-append "v" version))))
+              (file-name (git-file-name name version))
+              (sha256
+               (base32
+                "1sl201nmk601h0aii4234sycn4v2b0rjxf8yhrnik4yjzd68q9x5"))))
+    (build-system go-build-system)
+    (arguments
+     '(#:import-path "github.com/disintegration/imaging"))
+    (inputs (list go-golang-org-x-image))
+    (home-page "https://github.com/disintegration/imaging")
+    (synopsis "Simple image processing for Go")
+    (description "This package provides basic image processing functions
+(resize, rotate, crop, brightness/contrast adjustments, etc.).")
+    (license license:expat)))
+
+;;;
+;;; Avoid adding new packages to the end of this file. To reduce the chances
+;;; of a merge conflict, place them above by existing packages with similar
+;;; functionality or similar names.
+;;;

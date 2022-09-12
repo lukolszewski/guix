@@ -5103,6 +5103,27 @@ recent classes such as powerdot or beamer, both of which are tuned to
 
 (define-deprecated-package texlive-latex-seminar texlive-seminar)
 
+(define-public texlive-latex-seqsplit
+  (package
+    (inherit (simple-texlive-package
+              "texlive-latex-seqsplit"
+              (list "doc/latex/seqsplit/"
+                    "tex/latex/seqsplit/")
+              (base32 "1vwzs90520qsk22djl6gs6gpqx83y4b19kziirwj2xwbivcfk1h4")
+              #:trivial? #t))
+    (build-system texlive-build-system)
+    (home-page "https://ctan.org/pkg/seqsplit")
+    (synopsis "Split long sequences of characters in a neutral way")
+    (description
+     "@code{seqsplit} provides a command @code{\\seqsplit}, which makes its
+argument splittable anywhere, and then leaves the TeX paragraph-maker to do the
+splitting.  The package is suitable for situations when one needs to type long
+sequences of letters or of numbers in which there is no obvious break points to
+be found, such as in base-sequences in genes or calculations of transcendental
+numbers.  While the package may obviously be used to typeset DNA sequences, the
+user may consider the @code{dnaseq} as a rather more powerful alternative.")
+    (license license:lppl1.3+)))
+
 (define-public texlive-latex-stackengine
   (package
     (inherit (simple-texlive-package
@@ -5532,6 +5553,25 @@ is like @code{\\newcommand} or @code{\\renewcommand} except it
 always (re)defines a command.  There is also @code{\\makeenvironment} and
 @code{\\provideenvironment} for environments.")
     (license license:lppl1.3c+)))
+
+(define-public texlive-latex-marginfix
+  (package
+    (inherit (simple-texlive-package
+              "texlive-latex-marginfix"
+              (list "doc/latex/marginfix/"
+                    "tex/latex/marginfix/")
+              (base32 "1qinf42mjry8bi5h3kgbi6hcymnk8fw0w43527wm95nc365dq0mf")
+              #:trivial? #t))
+    (build-system texlive-build-system)
+    (home-page "https://ctan.org/pkg/marginfix")
+    (synopsis "Patch \\marginpar to avoid overfull margins")
+    (description
+     "Authors using LaTeX to typeset books with significant margin material
+often run into the problem of long notes running off the bottom of the page.
+This package implements a solution to make marginpars ``just work'' by keeping
+a list of floating inserts and arranging them intelligently in the output
+routine.")
+    (license license:lppl)))
 
 (define-public texlive-metalogo
   (package
@@ -6688,6 +6728,22 @@ splines, and filled circles and ellipses.  The package uses @code{tpic}
 @code{\\special} commands.")
     (license license:public-domain)))
 
+(define-public texlive-latex-enotez
+  (package
+    (inherit (simple-texlive-package
+              "texlive-latex-enotez"
+              (list "doc/latex/enotez/"
+                    "tex/latex/enotez/")
+              (base32 "1s1wyq6m5932gpbpvvkiw857q94jn1rp7xy9y7hysz9aafjqjyk2")
+              #:trivial? #t))
+    (build-system texlive-build-system)
+    (home-page "https://ctan.org/pkg/enotez")
+    (synopsis "Support for end-notes")
+    (description
+     "This package allows nested endnotes, supports @code{hyperref} and
+provides means for easy customization of the list of notes.")
+    (license license:lppl1.3c+)))
+
 (define-public texlive-enumitem
   (package
     (inherit
@@ -6798,6 +6854,23 @@ positions; a grid for orientation is available.")
 that is untidy; this package (though it is no substitute for a properly
 designed class) helps alleviate this untidiness.")
     (license license:lppl)))
+
+(define-public texlive-latex-pbox
+  (package
+    (inherit (simple-texlive-package
+              "texlive-latex-pbox"
+              (list "doc/latex/pbox/"
+                    "tex/latex/pbox/")
+              (base32 "0902snjidmhjml01zcppcpp4j6pidin1sdvfi7gnbb5v86zd5f0n")
+              #:trivial? #t))
+    (build-system texlive-build-system)
+    (home-page "https://ctan.org/pkg/pbox")
+    (synopsis "\\parbox with a variable width")
+    (description
+     "@code{pbox} defines a \\pbox{<max width>}{<text>} command which adjusts
+the box width to that of the enclosed text, up to the maximum width given.  The
+package also defines some associated length commands.")
+    (license license:gpl3+)))
 
 (define-public texlive-latex-pdfpages
   (package
@@ -9804,8 +9877,8 @@ of compatibility notes, for other packages, is provided in the
 documentation.  The package also provides the \"caption outside
 float\" facility, in the same way that simpler packages like
 @code{capt-ofcapt-of} do.  The package supersedes @code{caption2}.
-Packages @code{bicaption}, @code{ltcaption}, @code{newfloat},
-@code{subcaption} and @code{totalcount} are included in the bundle.")
+Packages @code{bicaption}, @code{ltcaption} and @code{subcaption} are
+included in the bundle.")
       (license license:lppl1.3+))))
 
 (define-public texlive-symbol
@@ -10663,6 +10736,29 @@ constructs TeX accepts as arguments to its @code{\\number} primitive
 are valid as arguments for the macros.  The package may be used under
 LaTeX and plain TeX.")
     (license (license:fsf-free "file:/binhex.dtx"))))
+
+(define-public texlive-latex-translations
+  (package
+    (inherit (simple-texlive-package
+              "texlive-latex-translations"
+              (list "doc/latex/translations/"
+                    "tex/latex/translations/")
+              (base32 "0vl7ckpbkjvz3a5snzppb96ncwgmhpwb2p6cg30grfyn421kap3v")
+              #:trivial? #t))
+    (build-system texlive-build-system)
+    (home-page "https://ctan.org/pkg/translations")
+    (synopsis "Internationalisation of LaTeX2e packages")
+    (description
+     ;; Polish not mentioned on CTAN, but there is a
+     ;; translations-basic-dictionary-polish.trsl file.
+     "This package (once part of the @code{exsheets} package), provides a
+framework for providing multilingual features to a LaTeX package.  The package
+has its own basic dictionaries for English, Brazilian, Catalan, Dutch, French,
+German, Polish and Spanish.  It aims to use translation material for English,
+Dutch, French, German, Italian, Spanish, Catalan, Turkish, Croatian, Hungarian,
+Danish and Portuguese from babel or polyglossia if either is in use in the
+document.")
+    (license license:lppl1.3c+)))
 
 (define-public texlive-translator
   (package
@@ -11572,3 +11668,122 @@ use of the fonts in LaTeX (Type 1) and XeLaTeX/LuaLaTeX (OTF).")
 Adobe in both Adobe Type 1 and OpenType formats, plus macros supporting the
 use of the fonts in LaTeX (Type 1) and XeLaTeX/LuaLaTeX (OTF).")
     (license (list license:lppl1.3+ license:silofl1.1))))
+
+(define-public texlive-latex-hyphenat
+  (package
+    (inherit (simple-texlive-package
+              "texlive-latex-hyphenat"
+              (list "doc/latex/hyphenat/"
+                    "tex/latex/hyphenat/")
+              (base32 "0b3jx2yvryx95am0ll9h6yc99niw2lwgsbq7r89j84z2qyp2llsq")
+              #:trivial? #t))
+    (build-system texlive-build-system)
+    (home-page "https://ctan.org/pkg/hyphenat")
+    (synopsis "Disable/enable hyphenation")
+    (description
+     "This package can disable all hyphenation or enable hyphenation of
+non-alphabetics or monospaced fonts.  The package can also enable hyphenation
+within ‘words’ that contain non-alphabetic characters (e.g., that include
+underscores), and hyphenation of text typeset in monospaced (e.g., cmtt)
+fonts.")
+    (license license:lppl1.3c+)))
+
+(define-public texlive-latex-lastpage
+  (package
+    (inherit (simple-texlive-package
+              "texlive-latex-lastpage"
+              (list "doc/latex/lastpage/"
+                    "tex/latex/lastpage/")
+              (base32 "0q6x743b8fkw9r82lrxy49f9xsg81bffynwvpnvpnp3h4mkafvdb")
+              #:trivial? #t))
+    (build-system texlive-build-system)
+    (home-page "https://ctan.org/pkg/lastpage")
+    (synopsis "Reference last page for Page N of M type footers")
+    (description
+     "This package enables referencing the number of pages in a LaTeX document
+through the introduction of a new label which can be referenced like
+@code{\\pageref{LastPage}} to give a reference to the last page of a document.
+It is particularly useful in the page footer that says: Page N of M.")
+    (license license:lppl1.3c+)))
+
+(define-public texlive-latex-tabto-ltx
+  (package
+    (name "texlive-latex-tabto-ltx")
+    (version (number->string %texlive-revision))
+    (source (origin
+              (method svn-fetch)
+              (uri (svn-reference (url (string-append
+                                        "svn://www.tug.org/texlive/tags/"
+                                        %texlive-tag "/Master/texmf-dist/"
+                                        "/tex/latex/tabto-ltx"))
+                                  (revision %texlive-revision)))
+              (file-name (string-append name "-" version "-checkout"))
+              (sha256
+               (base32
+                "1vq9s3n0mdgx2w84bjdsqxp3vcasfb824agjy56713902li1g8vm"))))
+    (build-system trivial-build-system)
+    (arguments
+     `(#:modules ((guix build utils))
+       #:builder (begin
+                   (use-modules (guix build utils))
+                   (let ((target (string-append (assoc-ref %outputs "out")
+                                  "/share/texmf-dist/tex/latex/tabto")))
+                     (mkdir-p target)
+                     (copy-recursively (assoc-ref %build-inputs "source")
+                                       target) #t))))
+    (home-page "https://ctan.org/pkg/tabto-ltx")
+    (synopsis "``Tab'' to a measured position in the line")
+    (description
+     "This package provides @code{\\tabto{<length>}}, which moves the
+typesetting position to @code{<length>} from the left margin of the paragraph.
+If the typesetting position is already further along, @code{\\tabto} starts a
+new line; the command @code{\\tabto*} will move position backwards if
+necessary, so that previous text may be overwritten.  In addition, the command
+@code{\\TabPositions} may be used to define a set of tabbing positions, after
+which the command @code{\\tab} advances typesetting position to the next
+defined ``tab stop''.")
+    (license license:lppl1.3+)))
+
+(define-public texlive-generic-soul
+  (let ((template (simple-texlive-package
+                   "texlive-generic-soul"
+                   (list "/doc/generic/soul/"
+                         "/tex/generic/soul/")
+                   (base32
+                    "11jdgvfpcv10y5j898495lf29k2m03x39v9jzb4v79w4cgxcmfps")
+                   #:trivial? #t)))
+    (package
+      (inherit template)
+      (home-page "http://www.ctan.org/pkg/soul")
+      (synopsis "Hyphenation for letterspacing, underlining, and more")
+      (description
+       "@code{soul} enables hyphenatable spacing out (letterspacing),
+underlining, striking out, etc., using the TeX hyphenation algorithm to find
+the proper hyphens automatically.  The package also provides a mechanism that
+can be used to implement similar tasks, that have to treat text syllable by
+syllable.  The package itself does not support UTF-8 input in ordinary
+(PDF)LaTeX; some UTF-8 support is offered by package @code{soulutf8}.")
+      (license license:lppl))))
+
+(define-public texlive-latex-totcount
+  (package
+    (inherit (simple-texlive-package
+              "texlive-latex-totcount"
+              (list "doc/latex/totcount/"
+                    "tex/latex/totcount/")
+              (base32 "0z4mijyk3z7555q8da41aiji602plis5z261z4rr1fl8sndhnhn1")
+              #:trivial? #t))
+    (build-system texlive-build-system)
+    (home-page "https://ctan.org/pkg/totcount")
+    (synopsis "Find the last value of a counter")
+    (description
+     "This package records the value that was last set, for any counter of
+interest.  Since most such counters are simply incremented when they are
+changed, the recorded value will usually be the maximum value.")
+    (license license:lppl1.3c+)))
+
+;;;
+;;; Avoid adding new packages to the end of this file. To reduce the chances
+;;; of a merge conflict, place them above by existing packages with similar
+;;; functionality or similar names.
+;;;
