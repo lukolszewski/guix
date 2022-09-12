@@ -536,7 +536,7 @@ fully fledged Spatial SQL capabilities.")
 (define-public proj
   (package
     (name "proj")
-    (version "7.2.1")
+    (version "9.0.1")
     (source
      (origin
        (method url-fetch)
@@ -544,16 +544,10 @@ fully fledged Spatial SQL capabilities.")
                            version ".tar.gz"))
        (sha256
         (base32
-         "050apzdn0isxpsblys1shrl9ccli5vd32kgswlgx1imrbwpg915k"))))
+         "18x6v4iaphyyxyzdgf76r764qwswvjz9w39zyiphsvchwz5slzkk"))))
     (build-system cmake-build-system)
     (arguments
-     `(#:configure-flags '("-DUSE_EXTERNAL_GTEST=ON")
-       #:phases
-       (modify-phases %standard-phases
-         (add-after 'unpack 'fix-version
-           (lambda _
-             (substitute* "CMakeLists.txt"
-               (("MAJOR 7 MINOR 2 PATCH 0") "MAJOR 7 MINOR 2 PATCH 1")))))))
+     `(#:configure-flags '("-DUSE_EXTERNAL_GTEST=ON")))
     (inputs
      (list curl libjpeg-turbo libtiff sqlite))
     (native-inputs
@@ -573,6 +567,27 @@ lets developers use the functionality of Proj in their own software.")
                    license:asl2.0
                    ;; src/geodesic.*, src/tests/geodtest.cpp
                    license:x11))))
+
+; This is the last version of proj that provides the old proj.4 API.
+(define-public proj-7
+  (package (inherit proj)
+    (version "7.2.1")
+    (source
+     (origin
+       (method url-fetch)
+       (uri (string-append "http://download.osgeo.org/proj/proj-"
+                           version ".tar.gz"))
+       (sha256
+        (base32
+         "050apzdn0isxpsblys1shrl9ccli5vd32kgswlgx1imrbwpg915k"))))
+    (arguments
+     `(#:configure-flags '("-DUSE_EXTERNAL_GTEST=ON")
+       #:phases
+       (modify-phases %standard-phases
+         (add-after 'unpack 'fix-version
+           (lambda _
+             (substitute* "CMakeLists.txt"
+               (("MAJOR 7 MINOR 2 PATCH 0") "MAJOR 7 MINOR 2 PATCH 1")))))))))
 
 (define-public proj.4
   (package
@@ -627,14 +642,14 @@ projections.")
 (define-public python-pyproj
   (package
     (name "python-pyproj")
-    (version "3.2.1")
+    (version "3.3.1")
     (source
       (origin
         (method url-fetch)
         (uri (pypi-uri "pyproj" version))
         (sha256
           (base32
-            "0xrqpy708qlyd7nqjra0dl7nvkqzaj9w0v7wq4j5pxazha9n14sa"))))
+            "1gjg63irs44djyqbp9gg7s02d0y5i9cd1a83phyzp5fcj56y3n5k"))))
     (build-system python-build-system)
     (arguments
      `(#:phases
@@ -1073,13 +1088,13 @@ utilities for data translation and processing.")
   (package
     (name "python-cartopy")
     ;; This is a post-release fix that adds build_ext to setup.py.
-    (version "0.19.0.post1")
+    (version "0.20.3")
     (source
      (origin
        (method url-fetch)
        (uri (pypi-uri "Cartopy" version))
        (sha256
-        (base32 "0xnm8z3as3hriivdfd26s6vn5b63gb46x6vxw6gh1mwfm5rlg2sb"))))
+        (base32 "01lhnkhw22jp6hnrs5qvgkq4fqcni2sx7ydiyv8w8xxx5wpglq0d"))))
     (build-system python-build-system)
     (arguments
      `(#:phases
@@ -1097,11 +1112,16 @@ utilities for data translation and processing.")
      (list python-matplotlib
            python-numpy
            python-pykdtree
+           python-pyproj
            python-pyshp
            python-scipy
            python-shapely))
     (inputs
-     (list geos proj))
+     (list geos
+           ;; cartopy's setup.py looks for the proj executable.
+           ;; Not sure if it actually makes use of it since it
+           ;; probably uses proj only through pyproj.
+           proj))
     (native-inputs
      (list python-cython python-flufl-lock python-pytest))
     (home-page "https://scitools.org.uk/cartopy/docs/latest/")
@@ -1501,7 +1521,7 @@ map display.  Downloads map data from a number of websites, including
            libnova
            libpng
            openjpeg
-           proj
+           proj-7
            qtbase-5
            zlib))
     (native-search-paths
@@ -1953,7 +1973,8 @@ using the dataset of topographical information collected by
     (native-inputs
      (list pkg-config qttools-5))
     (inputs
-     (list gdal
+     (list curl
+           gdal
            libjpeg-turbo
            proj
            qtbase-5
@@ -2189,6 +2210,7 @@ track your position right from your laptop.")
     (inputs
      `(("clipper" ,clipper)
        ("cups" ,cups)
+       ("curl" ,curl)
        ("gdal" ,gdal)
        ("proj" ,proj)
        ("qtbase" ,qtbase-5)
@@ -2377,14 +2399,14 @@ growing set of geoscientific methods.")
 (define-public qgis
   (package
     (name "qgis")
-    (version "3.16.3")
+    (version "3.26.2")
     (source
      (origin
        (method url-fetch)
        (uri (string-append "https://qgis.org/downloads/qgis-"
                            version ".tar.bz2"))
        (sha256
-        (base32 "012dv8dcg7w4lf6k37i41wialwhi0kpkxw2dnq19yqqk35632mzx"))))
+        (base32 "1hsq3wchsf7db7134fgg9xzzap35q1s4r6649d0krbw80xw5asca"))))
     (build-system cmake-build-system)
     (arguments
      `(#:modules ((guix build cmake-build-system)
@@ -2405,7 +2427,7 @@ growing set of geoscientific methods.")
                (("sip_dir = cfg.default_sip_dir")
                 (string-append "sip_dir = \""
                                (assoc-ref inputs "python-pyqt+qscintilla")
-                               "/share/sip\""))
+                               "/share/sip\"")))
                ;; Fix building with python-sip@5.
                ;;
                ;; The reason for this is that python-sip@5 introduces some
@@ -2416,31 +2438,15 @@ growing set of geoscientific methods.")
                ;; are, messing up the build. The long term solution is to fully
                ;; upgrade SIP, use sip-build and fix all failing packages, but
                ;; for now I just want to get the build working.
-               ((".pyqt_sip_dir...os.path.join.*,")
-                (string-append "'pyqt_sip_dir': \""
+             (substitute* "cmake/FindPyQt5.cmake"
+               (("SET\\(PYQT5_SIP_DIR \"\\$\\{Python_SITEARCH\\}/PyQt5/bindings\"\\)")
+                (string-append "SET(PYQT5_SIP_DIR \""
                                (assoc-ref inputs "python-pyqt+qscintilla")
-                               "/share/sip"  "\",")))
-             (substitute* (list "scripts/prepare_commit.sh"
-                                "scripts/qstringfixup.sh"
-                                "scripts/release.pl"
-                                "scripts/runtests_local_travis_config.sh"
-                                "scripts/sip_include.sh"
-                                "scripts/sipdiff"
-                                "scripts/sipify_all.sh"
-                                "scripts/spell_check/check_spelling.sh"
-                                "scripts/spell_check/spell_test.sh"
-                                "scripts/verify_indentation.sh"
-                                "tests/code_layout/test_banned_keywords.sh"
-                                "tests/code_layout/test_licenses.sh"
-                                "tests/code_layout/test_shellcheck.sh"
-                                "tests/code_layout/test_sip_include.sh"
-                                "tests/code_layout/test_sipfiles.sh"
-                                "tests/code_layout/test_sipify.sh")
+                               "/share/sip\")")))
+             (substitute* (list "tests/code_layout/test_qt_imports.sh"
+                                "tests/code_layout/test_qgsscrollarea.sh")
                (("\\$\\(git rev-parse --show-toplevel\\)")
-                (getcwd)))
-             (substitute* "tests/code_layout/test_sip_include.sh"
-               (("^REV=.*") "REV=currentrev\n"))
-             #t))
+                (getcwd)))))
          (replace 'check
            (lambda* (#:key inputs tests? #:allow-other-keys)
              (when tests?
@@ -2454,113 +2460,87 @@ growing set of geoscientific methods.")
                            '(;; Disable tests that require network access
                              "qgis_filedownloader"
                              ;; TODO: Find why the following tests fail
-                             "ProcessingGdalAlgorithmsRasterTest"
-                             "ProcessingGdalAlgorithmsVectorTest"
-                             "ProcessingGrass7AlgorithmsImageryTest"
-                             "ProcessingGrass7AlgorithmsRasterTest"
-                             "ProcessingGrass7AlgorithmsVectorTest"
-                             "ProcessingOtbAlgorithmsTest"
                              "ProcessingQgisAlgorithmsTestPt1"
                              "ProcessingQgisAlgorithmsTestPt2"
                              "ProcessingQgisAlgorithmsTestPt3"
                              "ProcessingQgisAlgorithmsTestPt4"
-                             "PyCoreAdittions"
+                             "ProcessingGdalAlgorithmsVectorTest"
+                             "ProcessingGrass7AlgorithmsImageryTest"
+                             "ProcessingGrass7AlgorithmsRasterTestPt1"
+                             "ProcessingGrass7AlgorithmsRasterTestPt2"
+                             "ProcessingGrass7AlgorithmsVectorTest"
+                             "ProcessingOtbAlgorithmsTest"
+                             "test_core_authmanager"
+                             "test_core_compositionconverter"
+                             "test_core_coordinatereferencesystem"
+                             "test_core_gdalutils"
+                             "test_core_labelingengine"
+                             "test_core_layout"
+                             "test_core_layouthtml"
+                             "test_core_layoutlabel"
+                             "test_core_layoutmultiframe"
+                             "test_core_layoutpicture"
+                             "test_core_legendrenderer"
+                             "test_core_networkaccessmanager"
+                             "test_core_rasterfilewriter"
+                             "test_core_tiledownloadmanager"
+                             "test_gui_dualview"
+                             "test_gui_htmlwidgetwrapper"
+                             "test_gui_filedownloader"
+                             "test_gui_queryresultwidget"
+                             "test_analysis_processingalgspt2"
+                             "test_analysis_processing"
+                             "test_provider_wcsprovider"
+                             "qgis_grassprovidertest7"
+                             "test_app_gpsinformationwidget"
                              "PyQgsAnnotation"
-                             "PyQgsAppStartup"
-                             "PyQgsAuthBasicMethod"
+                             "PyQgsAttributeTableModel"
                              "PyQgsAuthenticationSystem"
-                             "PyQgsAuxiliaryStorage"
-                             "PyQgsDBManagerGpkg"
-                             "PyQgsDBManagerSpatialite"
-                             "PyQgsDataItem"
-                             "PyQgsFieldValidator"
+                             "PyQgsExternalStorageWebDAV"
+                             "PyQgsFieldFormattersTest"
                              "PyQgsFileUtils"
                              "PyQgsGeometryTest"
-                             "PyQgsImageCache"
-                             "PyQgsImportIntoPostGIS"
-                             "PyQgsLayerDependencies"
-                             "PyQgsLayerMetadata"
-                             "PyQgsLayout"
+                             "PyQgsGoogleMapsGeocoder"
+                             "PyQgsHashLineSymbolLayer"
                              "PyQgsLayoutExporter"
                              "PyQgsLayoutHtml"
-                             "PyQgsLayoutLegend"
-                             "PyQgsLayoutMapGrid"
-                             "PyQgsMapClippingUtils"
+                             "PyQgsLineSymbolLayers"
                              "PyQgsMapLayer"
-                             "PyQgsMetadataBase"
-                             "PyQgsOGRProvider"
+                             "PyQgsNetworkContentFetcherRegistry"
                              "PyQgsOGRProviderGpkg"
-                             "PyQgsOapifProvider"
+                             "PyQgsOGRProviderSqlite"
+                             "PyQgsPalLabelingCanvas"
                              "PyQgsPalLabelingLayout"
-                             "PyQgsProcessingInPlace"
-                             "PyQgsProject"
+                             "PyQgsPalLabelingPlacement"
+                             "PyQgsProcessExecutable"
                              "PyQgsProviderConnectionGpkg"
-                             "PyQgsProviderConnectionPostgres"
                              "PyQgsProviderConnectionSpatialite"
-                             "PyQgsPythonProvider"
-                             "PyQgsRasterLayer"
-                             "PyQgsRasterResampler"
-                             "PyQgsRulebasedRenderer"
-                             "PyQgsSelectiveMasking"
-                             "PyQgsSettings"
-                             "PyQgsShapefileProvider"
+                             "PyQgsOGRProvider"
                              "PyQgsSpatialiteProvider"
-                             "PyQgsSvgCache"
-                             "PyQgsSymbolExpressionVariables"
-                             "PyQgsTextRenderer"
                              "PyQgsVectorFileWriter"
-                             "PyQgsVectorLayer"
-                             "PyQgsVectorLayerUtils"
+                             "PyQgsVectorLayerEditBuffer"
+                             "PyQgsVectorLayerEditBufferGroup"
+                             "PyQgsVectorLayerProfileGenerator"
                              "PyQgsVirtualLayerProvider"
                              "PyQgsWFSProvider"
-                             "qgis_arcgisrestutilstest"
-                             "qgis_authmanagertest"
-                             "qgis_compositionconvertertest"
-                             "qgis_coordinatereferencesystemtest"
-                             "qgis_expressiontest"
-                             "qgis_fontmarkertest"
-                             "qgis_geometrycheckstest"
-                             "qgis_geometrytest"
-                             "qgis_gpsinformationwidget"
-                             "qgis_grassprovidertest7"
-                             "qgis_imagecachetest"
-                             "qgis_labelingenginetest"
-                             "qgis_layouthtmltest"
-                             "qgis_layoutlabeltest"
-                             "qgis_layoutmanualtabletest"
-                             "qgis_layoutmapgridtest"
-                             "qgis_layoutmapoverviewtest"
-                             "qgis_layoutmaptest"
-                             "qgis_layoutmultiframetest"
-                             "qgis_layoutpicturetest"
-                             "qgis_layouttabletest"
-                             "qgis_layouttest"
-                             "qgis_mapdevicepixelratiotest"
-                             "qgis_maprendererjobtest"
-                             "qgis_meshcontourstest"
-                             "qgis_ogrproviderguitest"
-                             "qgis_painteffecttest"
-                             "qgis_pallabelingtest"
-                             "qgis_processingtest"
-                             "qgis_rasterlayertest"
+                             "PyQgsWFSProviderGUI"
+                             "PyQgsOapifProvider"
+                             "PyQgsLayerDependencies"
+                             "PyQgsDBManagerGpkg"
+                             "PyQgsDBManagerSpatialite"
+                             "PyQgsAuxiliaryStorage"
+                             "PyQgsSelectiveMasking"
                              "qgis_shellcheck"
-                             "qgis_sip_include"
-                             "qgis_sip_uptodate"
                              "qgis_sipify"
-                             "qgis_styletest"
-                             "qgis_svgmarkertest"
-                             "qgis_taskmanagertest"
-                             "qgis_wcsprovidertest"
-                             "qgis_ziplayertest"
-                             "TestQgsRandomMarkerSymbolLayer")
+                             "qgis_sip_include"
+                             "qgis_sip_uptodate")
                            "|")))))
          (add-after 'install 'wrap-python
            (assoc-ref python:%standard-phases 'wrap))
          (add-after 'wrap-python 'wrap-qt
            (lambda* (#:key outputs inputs #:allow-other-keys)
              (let ((out (assoc-ref outputs "out")))
-               (wrap-qt-program "qgis" #:output out #:inputs inputs))
-             #t))
+               (wrap-qt-program "qgis" #:output out #:inputs inputs))))
          (add-after 'wrap-qt 'wrap-gis
            (lambda* (#:key inputs outputs #:allow-other-keys)
              ;; TODO: Find if there is a way to get SAGA to work.
@@ -2578,10 +2558,10 @@ growing set of geoscientific methods.")
                (wrap-program (string-append out "/bin/qgis")
                  ;;`("PATH" ":" prefix (,saga))
                  `("QGIS_PREFIX_PATH" = (,out))
-                 `("GISBASE" = (,grass))))
-             #t)))))
+                 `("GISBASE" = (,grass)))))))))
     (inputs
-     (list exiv2
+     (list bash-minimal
+           exiv2
            expat
            gdal
            geos
@@ -2623,8 +2603,9 @@ growing set of geoscientific methods.")
            qtserialport
            qtsvg-5
            qwt
-           ;;("saga" ,saga)
-           sqlite))
+           ;; saga
+           sqlite
+           (list zstd "lib")))
     (native-inputs
      (list bison
            flex
@@ -2633,6 +2614,7 @@ growing set of geoscientific methods.")
            pkg-config
            python-mock
            python-nose2
+           python-pyqt-builder
            qttools-5
            shellcheck
            xorg-server-for-tests))
@@ -2753,6 +2735,7 @@ using third-party geocoders and other data sources.")
     (inputs
      (list boost
            cgal
+           curl
            gdal
            glew
            glu

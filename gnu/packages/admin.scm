@@ -325,14 +325,14 @@ interface and is based on GNU Guile.")
 (define-public shepherd-0.9
   (package
     (inherit shepherd)
-    (version "0.9.1")
+    (version "0.9.2")
     (source (origin
               (method url-fetch)
               (uri (string-append "mirror://gnu/shepherd/shepherd-"
                                   version ".tar.gz"))
               (sha256
                (base32
-                "0l2arn6gsyw88xk9phxnyplvv1mn8sqp3ipgyyb0nszdzvxlgd36"))
+                "0mcby3ygh3bpns44rb1vnk8bz2km4nlw092nrcgkm3nkqfmbp4p1"))
               (modules '((guix build utils)))
               (snippet
                ;; Avoid continuation barriers so (@ (fibers) sleep) can be
@@ -1382,14 +1382,16 @@ connection alive.")
                        ;; build system uses the built 'gen' executable.
                        (setenv "BUILD_CC" "gcc"))))
                  '())
-           (add-before 'build 'update-config-scripts
+           (add-before 'configure 'update-config-scripts
              (lambda* (#:key native-inputs inputs #:allow-other-keys)
                (for-each (lambda (file)
                                (install-file
                                  (search-input-file
                                    (or native-inputs inputs)
                                    (string-append "/bin/" file)) "."))
-                         '("config.guess" "config.sub"))
+                         '("config.guess" "config.sub"))))
+           (add-before 'build 'update-config-scripts-for-bind
+             (lambda* (#:key native-inputs inputs #:allow-other-keys)
                (for-each (lambda (file)
                                (install-file
                                  (search-input-file
@@ -2504,14 +2506,14 @@ characters can be replaced as well, as can UTF-8 characters.")
 (define-public tree
   (package
     (name "tree")
-    (version "2.0.2")
+    (version "2.0.3")
     (source (origin
               (method url-fetch)
               (uri (string-append
                     "http://mama.indstate.edu/users/ice/tree/src/tree-"
                     version ".tgz"))
               (sha256
-               (base32 "1bzfkr3kmn2v5x7ljir691fr9hhjvjxqsfz0fc5fgi6ki0fklsbx"))))
+               (base32 "079vda37d5i3nfx12wx81z6r6bxynv2jww1z1hjziiwxbxxyf55s"))))
     (build-system gnu-build-system)
     (arguments
      (list

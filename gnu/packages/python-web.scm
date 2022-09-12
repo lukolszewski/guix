@@ -54,6 +54,8 @@
 ;;; Copyright © 2022 Antero Mejr <antero@mailbox.org>
 ;;; Copyright © 2022 Luis Henrique Gomes Higino <luishenriquegh2701@gmail.com>
 ;;; Copyright © 2022 Nicolas Graves <ngraves@ngraves.fr>
+;;; Copyright © 2022 Tomasz Jeneralczyk <tj@schwi.pl>
+;;; Copyright © 2022 msimonin <matthieu.simonin@inria.fr>
 ;;;
 ;;; This file is part of GNU Guix.
 ;;;
@@ -4982,12 +4984,17 @@ hard or impossible to fix in cssselect.")
                ;; The tests are prone to get stuck. Use pytest-timeout’s --timeout
                ;; flag to get a meaningful idea about where.
                (invoke "pytest" "-vv" "--timeout=300"
-                       "-k" ,(string-append
+                       "--timeout-method=thread"
+                       "-k" (string-append
                               ;; Timeout, because SIGINT cannot be sent to child.
                               "not test_signals_sigint_pycode_continue "
                               "and not test_signals_sigint_pycode_stop "
                               "and not test_signals_sigint_uvcode "
                               "and not test_signals_sigint_uvcode_two_loop_runs "
+                              ;; This test is racy and prone to get stuck on
+                              ;; various platforms, possibly a aiohttp issue:
+                              ;;  https://github.com/MagicStack/uvloop/issues/412
+                              "and not test_remote_shutdown_receives_trailing_data "
                               ;; It looks like pytest is preventing
                               ;; custom stdout/stderr redirection,
                               ;; even with -s.
@@ -6270,17 +6277,16 @@ Encoding for HTTP.")
 (define-public python-cloudscraper
   (package
     (name "python-cloudscraper")
-    (version "1.2.58")
+    (version "1.2.60")
     (source
      (origin
        (method git-fetch)
        (uri (git-reference
              (url "https://github.com/VeNoMouS/cloudscraper")
-             ;; Corresponds to 1.2.58
-             (commit "f3a3d067ea8b5238e9a0948aed0c3fa0d9c29b96")))
+             (commit version)))
        (file-name (git-file-name name version))
        (sha256
-        (base32 "18fbp086imabjxly04rrchbf6n6m05bpd150zxbw7z2w3mjnpsqd"))
+        (base32 "00cmxgwdm0x1j4a4ipwvpzih735hdzidljbijk1b3laj3dgvnvsm"))
        (modules '((guix build utils)))
        (snippet
         '(with-directory-excursion "cloudscraper"
@@ -6320,7 +6326,7 @@ Encoding for HTTP.")
            python-requests
            python-requests-toolbelt
            python-responses
-           python-pyparsing-2.4.7))
+           python-pyparsing))
     (native-inputs
      (list python-pytest))
     (home-page "https://github.com/venomous/cloudscraper")
@@ -7786,3 +7792,28 @@ list, create, update, or delete resources (e.g. Order, Product, Collection).")
     (description
      "This package provides a library to parse and apply patches.")
     (license license:expat)))
+
+(define-public python-grid5000
+  (package
+    (name "python-grid5000")
+    (version "1.2.3")
+    (source (origin
+              (method git-fetch)
+              (uri (git-reference
+                    (url "https://gitlab.inria.fr/msimonin/python-grid5000")
+                    (commit (string-append "v" version))))
+              (file-name (git-file-name name version))
+              (sha256
+               "097pm8b68ihk29xz9zv29b1x0bhgjb4lfj8zxk2grbsh7wr9dipg")))
+    (build-system python-build-system)
+    (native-inputs (list python-wheel))
+    (propagated-inputs (list python-requests python-ipython python-pyyaml))
+    (arguments
+     (list #:tests? #f)) ; No tests.
+    (home-page "https://pypi.org/project/python-grid5000/")
+    (synopsis "Grid5000 python client")
+    (description
+     "python-grid5000 is a python package wrapping the Grid5000 REST API.
+You can use it as a library in your python project or you can explore the
+Grid5000 resources interactively using the embedded shell.")
+    (license license:gpl3+)))

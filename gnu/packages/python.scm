@@ -388,7 +388,7 @@
            gdbm
            libffi ; for ctypes
            sqlite ; for sqlite extension
-           openssl
+           openssl-1.1
            readline
            zlib
            tcl
@@ -556,6 +556,9 @@ data types.")
                            (map cdr outputs)))))
            (replace 'install-sitecustomize.py
              ,(customize-site version))))))
+    (inputs
+     (modify-inputs (package-inputs python-2.7)
+       (replace "openssl" openssl)))
     (native-inputs
      `(("tzdata" ,tzdata-for-tests)
        ("unzip" ,unzip)
@@ -862,7 +865,7 @@ ease from the desktop to a microcontroller or embedded system.")
                     (substitute* '("lib_pypy/_md5.py"
                                    "lib_pypy/_sha1.py")
                       ((shebang-match-python) shebang-pypy3))))
-                (copy-recursively dist-dir out)))))))
+                (copy-recursively dist-dir #$output)))))))
     (native-inputs
      (list gzip
            nss-certs                    ; For ssl tests

@@ -41,6 +41,7 @@
   #:use-module (guix grafts)
   #:use-module (guix gexp)
   #:use-module (guix derivations)
+  #:use-module (guix diagnostics)
   #:use-module (guix packages)
   #:use-module (guix utils)
   #:use-module (guix monads)
@@ -1046,6 +1047,10 @@ Some ACTIONS support additional ARGS.\n"))
                          for 'describe' and 'list-generations', list installed
                          packages matching REGEXP"))
   (newline)
+  (show-cross-build-options-help)
+  (newline)
+  (show-native-build-options-help)
+  (newline)
   (display (G_ "
   -h, --help             display this help and exit"))
   (display (G_ "
@@ -1136,14 +1141,6 @@ Some ACTIONS support additional ARGS.\n"))
                    (let ((level (string->number* arg)))
                      (alist-cons 'verbosity level
                                  (alist-delete 'verbosity result)))))
-         (option '(#\s "system") #t #f
-                 (lambda (opt name arg result)
-                   (alist-cons 'system arg
-                               (alist-delete 'system result eq?))))
-         (option '("target") #t #f
-                 (lambda (opt name arg result)
-                   (alist-cons 'target arg
-                               (alist-delete 'target result eq?))))
          (option '(#\r "root") #t #f
                  (lambda (opt name arg result)
                    (alist-cons 'gc-root arg result)))
@@ -1153,7 +1150,9 @@ Some ACTIONS support additional ARGS.\n"))
          (option '(#\I "list-installed") #f #t
                  (lambda (opt name arg result)
                    (alist-cons 'list-installed (or arg "") result)))
-         %standard-build-options))
+         (append %standard-build-options
+                 %standard-cross-build-options
+                 %standard-native-build-options)))
 
 (define %default-options
   ;; Alist of default option values.
@@ -1259,7 +1258,10 @@ resulting from command-line parsing."
                          (size image-size)
                          (volatile-root? volatile?)
                          (shared-network? shared-network?))))
-         (os          (image-operating-system image))
+         (os          (or (image-operating-system image)
+                          (raise
+                           (formatted-message
+                            (G_ "image lacks an operating-system")))))
          (target-file (match args
                         ((first second) second)
                         (_ #f)))

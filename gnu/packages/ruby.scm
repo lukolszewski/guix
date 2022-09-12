@@ -29,6 +29,8 @@
 ;;; Copyright © 2020 Tomás Ortín Fernández <tomasortin@mailbox.org>
 ;;; Copyright © 2021 Giovanni Biscuolo <g@xelera.eu>
 ;;; Copyright © 2022 Philip McGrath <philip@philipmcgrath.com>
+;;; Copyright © 2022 Remco van 't Veer <remco@remworks.net>
+;;; Copyright © 2022 Taiju HIGASHI <higashi@taiju.info>
 ;;;
 ;;; This file is part of GNU Guix.
 ;;;
@@ -100,7 +102,7 @@
 (define-public ruby-2.6
   (package
     (name "ruby")
-    (version "2.6.5")
+    (version "2.6.10")
     (source
      (origin
        (method url-fetch)
@@ -109,7 +111,7 @@
                            "/ruby-" version ".tar.xz"))
        (sha256
         (base32
-         "0qhsw2mr04f3lqinkh557msr35pb5rdaqy4vdxcj91flgxqxmmnm"))
+         "1wn12klc44hn2nh5v1lkqbdyvljip6qhwjqvkkf8zf112gaxxn2z"))
        (modules '((guix build utils)))
        (snippet `(begin
                    ;; Remove bundled libffi
@@ -137,7 +139,7 @@
                (("/bin/sh") (which "sh")))
              #t)))))
     (inputs
-     (list readline openssl libffi gdbm))
+     (list readline openssl-1.1 libffi gdbm))
     (propagated-inputs
      (list zlib))
     (native-search-paths
@@ -154,6 +156,7 @@ a focus on simplicity and productivity.")
   (package
     (inherit ruby-2.6)
     (version "2.7.4")
+    (replacement ruby-2.7-fixed) ; security fixes
     (source
      (origin
        (inherit (package-source ruby-2.6))
@@ -188,10 +191,24 @@ a focus on simplicity and productivity.")
     (native-inputs
      (list autoconf))))
 
+(define ruby-2.7-fixed
+  (package
+    (inherit ruby-2.7)
+    (version "2.7.6")
+    (source
+     (origin
+       (inherit (package-source ruby-2.7))
+       (uri (string-append "https://cache.ruby-lang.org/pub/ruby/"
+                           (version-major+minor version)
+                           "/ruby-" version ".tar.gz"))
+       (sha256
+        (base32
+         "042xrdk7hsv4072bayz3f8ffqh61i8zlhvck10nfshllq063n877"))))))
+
 (define-public ruby-3.0
   (package
     (inherit ruby-2.7)
-    (version "3.0.2")
+    (version "3.0.4")
     (source
      (origin
        (method url-fetch)
@@ -200,12 +217,15 @@ a focus on simplicity and productivity.")
                            "/ruby-" version ".tar.xz"))
        (sha256
         (base32
-         "0h2w2ms4gx2s96v3lzdr3add94bd2qqkhdjzaycmaqhg21rpf3jp"))))))
+         "1w7jpq3flnm007z5kj8kixgm8l4smb80w8ak4993a12j0irzq8lf"))))
+    (inputs
+     (modify-inputs (package-inputs ruby-2.7)
+       (replace "openssl" openssl)))))
 
 (define-public ruby-3.1
   (package
-    (inherit ruby-2.7)
-    (version "3.1.1")
+    (inherit ruby-3.0)
+    (version "3.1.2")
     (source
      (origin
        (method url-fetch)
@@ -214,40 +234,7 @@ a focus on simplicity and productivity.")
                            "/ruby-" version ".tar.xz"))
        (sha256
         (base32
-         "1akcl7vhmwfm6ybj7493kzy58ykh2r39ri9f4xfm2xmhg1msmvvs"))))))
-
-(define-public ruby-2.5
-  (package
-    (inherit ruby-2.6)
-    (version "2.5.9")
-    (source
-     (origin
-       (method url-fetch)
-       (uri (string-append "http://cache.ruby-lang.org/pub/ruby/"
-                           (version-major+minor version)
-                           "/ruby-" version ".tar.xz"))
-       (sha256
-        (base32
-         "1w2qncacm7h3f3il1whghdabwnv9fvwmz9f1a9vcg32006ljyzx8"))))))
-
-(define-public ruby-2.4
-  (package
-    (inherit ruby-2.6)
-    (version "2.4.10")
-    (source
-     (origin
-       (method url-fetch)
-       (uri (string-append "http://cache.ruby-lang.org/pub/ruby/"
-                           (version-major+minor version)
-                           "/ruby-" version ".tar.xz"))
-       (sha256
-        (base32
-         "1prhqlgik1zmw9lakl6hkriqslspw48pvhxff17h7ns42p8qwrnm"))
-       (modules '((guix build utils)))
-       (snippet `(begin
-                   ;; Remove bundled libffi
-                   (delete-file-recursively "ext/fiddle/libffi-3.2.1")
-                   #t))))))
+         "0amzqczgvr51ilcqfgw0n41hrfanzi0wh8k6am3x5dm1z0bx046a"))))))
 
 (define-public ruby ruby-2.7)
 
@@ -5412,6 +5399,24 @@ The output can be customized with a formatting system.")
     (home-page "https://github.com/jfelchner/ruby-progressbar")
     (license license:expat)))
 
+(define-public ruby-latest-ruby
+  (package
+    (name "ruby-latest-ruby")
+    (version "3.1.0")
+    (source (origin
+              (method url-fetch)
+              (uri (rubygems-uri "latest_ruby" version))
+              (sha256
+               (base32
+                "15rqwgxzpnkzdiz8m02jra0zq5sx0fiz61vkfrj1ls6slqfhnzqg"))))
+    (build-system ruby-build-system)
+    (arguments
+     '(#:tests? #f)) ; No Rakefile
+    (synopsis "Answers the question of what the latest Ruby version is")
+    (description "Knows about MRI, Rubinius, JRuby, MagLev and MacRuby.")
+    (home-page "https://github.com/kyrylo/latest_ruby")
+    (license license:zlib)))
+
 (define-public ruby-pry
   (package
     (name "ruby-pry")
@@ -5433,6 +5438,29 @@ The output can be customized with a formatting system.")
 Ruby.  It features syntax highlighting, a plugin architecture, runtime
 invocation, and source and documentation browsing.")
     (home-page "https://cobaltbluemedia.com/pryrepl/")
+    (license license:expat)))
+
+(define-public ruby-pry-doc
+  (package
+    (name "ruby-pry-doc")
+    (version "1.3.0")
+    (source (origin
+              (method url-fetch)
+              (uri (rubygems-uri "pry-doc" version))
+              (sha256
+               (base32
+                "0wyvql6pb6m8jl8bsamabxhxhd86bnqblspaxzz05sl0fm2ynj0r"))))
+    (build-system ruby-build-system)
+    (propagated-inputs (list ruby-pry ruby-yard))
+    (native-inputs (list ruby-latest-ruby ruby-rspec ruby-rake)) ;for tests
+    (synopsis "Provides YARD and extended documentation support for Pry")
+    (description
+     "Pry Doc is a Pry REPL plugin.  It provides extended documentation
+support for the REPL by means of improving the @code{show-doc} and
+@code{show-source} commands.  With help of the plugin the commands are
+be able to display the source code and the docs of Ruby methods and
+classes implemented in C.")
+    (home-page "https://github.com/pry/pry-doc")
     (license license:expat)))
 
 (define-public ruby-single-cov
@@ -7228,7 +7256,8 @@ run.")
     (arguments
      `(#:test-target "default"
        ;; TODO: Figure out why test hangs.
-       #:tests? ,(not (target-riscv64?))
+       #:tests? ,(not (or (%current-target-system)
+                          (target-riscv64?)))
        #:phases
        (modify-phases %standard-phases
          (add-before 'check 'set-home
@@ -13737,3 +13766,9 @@ can also be used as a Ruby library or as a web application, though the later
 has not yet been packaged for Guix.")
     (license license:bsd-2)
     (properties `((upstream-name . "anystyle-cli")))))
+
+;;;
+;;; Avoid adding new packages to the end of this file. To reduce the chances
+;;; of a merge conflict, place them above by existing packages with similar
+;;; functionality or similar names.
+;;;

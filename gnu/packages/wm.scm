@@ -832,14 +832,14 @@ tiled on several screens.")
 (define-public xmobar
   (package
     (name "xmobar")
-    (version "0.40")
+    (version "0.44.2")
     (source (origin
               (method url-fetch)
               (uri (string-append "https://hackage.haskell.org/package/xmobar/"
                                   "xmobar-" version ".tar.gz"))
               (sha256
                (base32
-                "1mrdiblm8vilkm1w23pz6xbi16zh1b1lvql26czjzw5k79vd67sf"))))
+                "0gdphjn5ll5lkb2psdsb34563wsz6g0y2gg3z8cj4jy8lvbbv808"))))
     (build-system haskell-build-system)
     (native-inputs
      (list ghc-hspec hspec-discover))
@@ -1653,7 +1653,7 @@ modules for building a Wayland compositor.")
 (define-public swaylock
   (package
     (name "swaylock")
-    (version "1.5")
+    (version "1.6")
     (source
      (origin
        (method git-fetch)
@@ -1662,7 +1662,7 @@ modules for building a Wayland compositor.")
              (commit version)))
        (file-name (git-file-name name version))
        (sha256
-        (base32 "0r95p4w11dwm5ra614vddz83r8j7z6gd120z2vcchy7m9b0f15kf"))))
+        (base32 "1ihdvx6gdinzabvnazjmkk3ajrp7ngg0jzfwcjqn4hcjv64s0lam"))))
     (build-system meson-build-system)
     (inputs (list cairo gdk-pixbuf libxkbcommon
                   ;("linux-pam" ,linux-pam) ; FIXME: Doesn't work.

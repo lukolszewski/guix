@@ -9,9 +9,9 @@
 ;;; Copyright © 2016 Kei Kebreau <kkebreau@posteo.net>
 ;;; Copyright © 2017 Nikita <nikita@n0.is>
 ;;; Copyright © 2017, 2018 Mark H Weaver <mhw@netris.org>
-;;; Copyright © 2017, 2018, 2019, 2020 Marius Bakke <mbakke@fastmail.com>
+;;; Copyright © 2017, 2018, 2019, 2020, 2022 Marius Bakke <marius@gnu.org>
 ;;; Copyright © 2017, 2018, 2019 Rutger Helling <rhelling@mykolab.com>
-;;; Copyright © 2017, 2020, 2021 Brendan Tildesley <mail@brendan.scot>
+;;; Copyright © 2017, 2020, 2021, 2022 Brendan Tildesley <mail@brendan.scot>
 ;;; Copyright © 2018, 2020–2022 Tobias Geerinckx-Rice <me@tobias.gr>
 ;;; Copyright © 2018 Pierre Neidhardt <mail@ambrevar.xyz>
 ;;; Copyright © 2018 Stefan Stefanović <stefanx2ovic@gmail.com>
@@ -27,9 +27,10 @@
 ;;; Copyright © 2021 Robby Zambito <contact@robbyzambito.me>
 ;;; Copyright © 2021, 2022 Maxime Devos <maximedevos@telenet.be>
 ;;; Copyright © 2021 John Kehayias <john.kehayias@protonmail.com>
-;;; Copyright © 2021, 2021 Maxim Cournoyer <maxim.cournoyer@gmail.com>
+;;; Copyright © 2021, 2021, 2022 Maxim Cournoyer <maxim.cournoyer@gmail.com>
 ;;; Copyright © 2022 Daniel Meißner <daniel.meissner-i4k@ruhr-uni-bochum.de>
 ;;; Copyright © 2022 muradm <mail@muradm.net>
+;;; Copyright © 2022 Petr Hodina <phodina@protonmail.com>
 ;;;
 ;;; This file is part of GNU Guix.
 ;;;
@@ -72,6 +73,7 @@
   #:use-module (gnu packages cmake)
   #:use-module (gnu packages compression)
   #:use-module (gnu packages cryptsetup)
+  #:use-module (gnu packages curl)
   #:use-module (gnu packages databases)
   #:use-module (gnu packages disk)
   #:use-module (gnu packages docbook)
@@ -125,7 +127,7 @@
 (define-public appstream
   (package
     (name "appstream")
-    (version "0.13.1")
+    (version "0.15.5")
     (source
      (origin
        (method url-fetch)
@@ -134,69 +136,44 @@
                        "appstream/releases/"
                        "AppStream-" version ".tar.xz"))
        (sha256
-        (base32 "09l6ixz1w29pi0nb0flz14m4r3f2hpqpp1fq8y66v9xa4c9fczds"))))
+        (base32 "1hh41r82a2p7anyadfsp9lmylrrj1a6gknx2g4w6ha97riifs5fb"))))
     (build-system meson-build-system)
     (arguments
-     `(#:glib-or-gtk? #t
-       #:phases
-       (modify-phases %standard-phases
-         (add-after 'unpack 'patch-libstemmer
-           (lambda* (#:key inputs #:allow-other-keys)
-             (substitute* "meson.build"
-               (("/usr/include")
-                (string-append (assoc-ref inputs "libstemmer")
-                               "/include")))
-             #t))
-         (add-after 'patch-libstemmer 'patch-docbook-xml
-           (lambda* (#:key inputs #:allow-other-keys)
-             (with-directory-excursion "docs/api"
-               (substitute* "appstream-docs.xml"
-                 (("http://www.oasis-open.org/docbook/xml/4.3/")
-                  (string-append (assoc-ref inputs "docbook-xml-4.3")
-                                 "/xml/dtd/docbook/"))))
-             (for-each (lambda (file)
-                         (substitute* file
-                           (("http://www.oasis-open.org/docbook/xml/4.5/")
-                            (string-append (assoc-ref inputs "docbook-xml")
-                                           "/xml/dtd/docbook/"))))
-                       (find-files "scripts/desc" "\\.xml$"))
-             #t))
-         (add-after 'patch-docbook-xml 'disable-failing-tests
-           (lambda _
-             (substitute* "tests/test-pool.c"
-               (("[ \t]*g_test_add_func \\(\"/AppStream/PoolRead?.*;")
-                "")
-               (("[ \t]*g_test_add_func \\(\"/AppStream/PoolReadAsync?.*;")
-                "")
-               (("[ \t]*g_test_add_func \\(\"/AppStream/PoolEmpty?.*;")
-                "")
-               (("[ \t]*g_test_add_func \\(\"/AppStream/Cache?.*;")
-                "")
-               (("[ \t]*g_test_add_func \\(\"/AppStream/Merges?.*;")
-                ""))
-             #t))
-         (add-after 'disable-failing-tests 'patch-install-dir
-           (lambda* (#:key outputs #:allow-other-keys)
-             (substitute* "data/meson.build"
-               (("/etc")
-                (string-append (assoc-ref outputs "out")
-                               "/etc")))
-             #t)))))
+     (list
+      #:meson meson-0.63
+      #:glib-or-gtk? #t
+      #:phases
+      #~(modify-phases %standard-phases
+          (add-after 'unpack 'patch-libstemmer
+            (lambda* (#:key inputs #:allow-other-keys)
+              (let ((libstemmer.h (search-input-file inputs
+                                                     "include/libstemmer.h")))
+              (substitute* "meson.build"
+                (("/usr/include")
+                 (dirname libstemmer.h))))))
+          (add-after 'unpack 'disable-failing-tests
+            (lambda _
+              (substitute* "tests/test-pool.c"
+                (("[ \t]*g_test_add_func \\(\"/AppStream/PoolRead?.*;")
+                 ""))))
+          (add-before 'check 'check-setup
+            (lambda _
+              (setenv "HOME" (getcwd)))))))
     (native-inputs
-     `(("cmake" ,cmake)
-       ("docbook-xml-4.3" ,docbook-xml-4.3)
-       ("docbook-xml" ,docbook-xml)
-       ("docbook-xsl" ,docbook-xsl)
-       ("gettext" ,gettext-minimal)
-       ("glib:bin" ,glib "bin")
-       ("gobject-introspection" ,gobject-introspection)
-       ("gperf" ,gperf)
-       ("gtk-doc" ,gtk-doc/stable)
-       ("pkg-config" ,pkg-config)
-       ("python" ,python-wrapper)
-       ("xsltproc" ,libxslt)))
+     (list docbook-xml-4.3
+           docbook-xml
+           docbook-xsl
+           gettext-minimal
+           `(,glib "bin")
+           gobject-introspection
+           gperf
+           gtk-doc/stable
+           itstool
+           libxslt
+           pkg-config
+           python-wrapper))
     (inputs
-     (list libsoup-minimal-2 libstemmer libxml2 libyaml lmdb))
+     (list curl libsoup-minimal-2 libstemmer libxmlb libxml2 libyaml lmdb))
     (propagated-inputs
      (list glib))
     (synopsis "Tools and libraries to work with AppStream metadata")
@@ -209,9 +186,21 @@ specifications for things like an unified software metadata database, screenshot
 services and various other things needed to create user-friendly
 application-centers for distributions.")
     (home-page "https://www.freedesktop.org/wiki/Distributions/AppStream/")
-    ;; XXX: meson.build claims both, headers just indicate lgpl2.1+
-    ;;      there are also some (irrelevant) wtfpl2 examples
-    (license (list license:gpl2+ license:lgpl2.1+))))
+    (license license:lgpl2.1+)))
+
+(define-public appstream-qt
+  (package/inherit appstream
+    (name "appstream-qt")
+    (native-inputs
+     (modify-inputs (package-native-inputs appstream)
+       (prepend qttools-5)))
+    (inputs
+     (modify-inputs (package-inputs appstream)
+       (prepend qtbase-5)))
+    (arguments
+     (substitute-keyword-arguments (package-arguments appstream)
+       ((#:configure-flags flags #~'())
+        #~(append '("-Dqt=true") #$flags))))))
 
 (define-public farstream
   (package
@@ -1074,8 +1063,11 @@ fullscreen) or other display servers.")
     (build-system meson-build-system)
     (inputs
      (list wayland))
-    (native-inputs
-     (list pkg-config python))
+    (native-inputs (cons* pkg-config python
+                          (if (%current-target-system)
+                              (list pkg-config-for-build
+                                    wayland) ; for wayland-scanner
+                              '())))
     (synopsis "Wayland protocols")
     (description "Wayland-Protocols contains Wayland protocols that add
 functionality not available in the Wayland core protocol.  Such protocols either
@@ -1086,6 +1078,21 @@ protocol either in Wayland core, or some other protocol in wayland-protocols.")
      '((release-monitoring-url
         . "https://wayland.freedesktop.org/releases.html")))
     (license license:expat)))
+
+;;; This is just a temporary package that should be deleted
+(define-public wayland-protocols-next
+  (package
+    (inherit wayland-protocols)
+    (name "wayland-protocols")
+    (version "1.26")
+    (source (origin
+              (method url-fetch)
+              (uri (string-append
+                    "https://wayland.freedesktop.org/releases/"
+                    "wayland-protocols-" version ".tar.xz"))
+              (sha256
+               (base32
+                "04vgllmpmrv14x3x64ns01vgwx4hriljayjkz9idgbv83i63hly5"))))))
 
 (define-public waylandpp
   (package
@@ -1435,7 +1442,7 @@ message bus.")
 (define-public accountsservice
   (package
     (name "accountsservice")
-    (version "0.6.55")
+    (version "22.08.8")
     (source
      (origin
        (method url-fetch)
@@ -1443,45 +1450,75 @@ message bus.")
                            "accountsservice/accountsservice-"
                            version ".tar.xz"))
        (sha256
-        (base32 "16wwd633jak9ajyr1f1h047rmd09fhf3kzjz6g5xjsz0lwcj8azz"))))
+        (base32 "14d3lwik048h62qrzg1djdd2sqmxf3m1r859730pvzhrd6krg6ch"))
+       (patches (search-patches "accountsservice-extensions.patch"))))
     (build-system meson-build-system)
     (arguments
-     `(#:tests? #f ; XXX: tests require DocBook 4.1.2
-       #:configure-flags
+     `(#:configure-flags
        '("--localstatedir=/var"
-         "-Dsystemdsystemunitdir=/tmp/empty"
-         "-Dsystemd=false"
-         "-Delogind=true")
+         "-Delogind=true"
+         "-Ddocbook=true"
+         "-Dgtk_doc=true"
+         "-Dsystemdsystemunitdir=/tmp/empty")
        #:phases
        (modify-phases %standard-phases
-         (add-after 'unpack 'patch-/bin/cat
-           (lambda _
-             (substitute* "src/user.c"
-               (("/bin/cat") (which "cat")))))
-         (add-before
-          'configure 'pre-configure
-          (lambda* (#:key inputs #:allow-other-keys)
-            (substitute* "meson_post_install.py"
-              (("in dst_dirs") "in []"))
-            (let ((shadow (assoc-ref inputs "shadow")))
-              (substitute* '("src/user.c" "src/daemon.c")
-                (("/usr/sbin/usermod")
-                 (string-append shadow "/sbin/usermod"))
-                (("/usr/sbin/useradd")
-                 (string-append shadow "/sbin/useradd"))
-                (("/usr/sbin/userdel")
-                 (string-append shadow "/sbin/userdel"))
-                (("/usr/bin/passwd")
-                 (string-append shadow "/bin/passwd"))
-                (("/usr/bin/chage")
-                 (string-append shadow "/bin/chage")))))))))
+         (add-after 'unpack 'patch-docbook-references
+           ;; Having XML_CATALOG_FILES set is not enough; xmlto does not seem
+           ;; to honor it.
+           (lambda* (#:key inputs #:allow-other-keys)
+             (substitute* (find-files "." "\\.xml(\\.in)?$")
+               (("http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd")
+                (search-input-file inputs "share/xml/dbus-1/introspect.dtd"))
+               (("http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd")
+                (search-input-file inputs "xml/dtd/docbook/docbookx.dtd")))))
+         (add-after 'unpack 'patch-paths
+           (lambda* (#:key inputs #:allow-other-keys)
+             (substitute* "meson_post_install.py"
+               (("in dst_dirs") "in []"))
+             (substitute* '("src/user.c" "src/daemon.c")
+               (("/bin/cat")
+                (search-input-file inputs "bin/cat"))
+               (("/usr/sbin/usermod")
+                (search-input-file inputs "sbin/usermod"))
+               (("/usr/sbin/useradd")
+                (search-input-file inputs "sbin/useradd"))
+               (("/usr/sbin/userdel")
+                (search-input-file inputs "sbin/userdel"))
+               (("/usr/bin/passwd")
+                (search-input-file inputs "bin/passwd"))
+               (("/usr/bin/chage")
+                (search-input-file inputs "bin/chage")))))
+         (add-after 'install 'wrap-with-xdg-data-dirs
+           ;; This is to allow accountsservice finding extensions, which
+           ;; should be installed to the system profile.
+           (lambda* (#:key outputs #:allow-other-keys)
+             (wrap-program (search-input-file outputs "libexec/accounts-daemon")
+               '("XDG_DATA_DIRS" prefix
+                 ("/run/current-system/profile/share"))))))))
     (native-inputs
-     `(("glib:bin" ,glib "bin") ; for gdbus-codegen, etc.
-       ("gobject-introspection" ,gobject-introspection)
-       ("intltool" ,intltool)
-       ("pkg-config" ,pkg-config)))
+     (list docbook-xml-4.1.2
+           docbook-xsl
+           gettext-minimal
+           `(,glib "bin")               ; for gdbus-codegen, etc.
+           gobject-introspection
+           gtk-doc
+           libxml2                      ;for XML_CATALOG_FILES
+           libxslt
+           pkg-config
+           vala
+           xmlto
+
+           ;; For the tests.
+           python
+           python-dbusmock
+           python-pygobject))
     (inputs
-     (list dbus elogind polkit shadow))
+     (list coreutils-minimal
+           dbus
+           elogind
+           shadow))
+    (propagated-inputs
+     (list polkit))                     ; listed in Requires.private
     (home-page "https://www.freedesktop.org/wiki/Software/AccountsService/")
     (synopsis "D-Bus interface for user account query and manipulation")
     (description

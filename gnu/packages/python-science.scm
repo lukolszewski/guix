@@ -835,7 +835,7 @@ of Pandas
 (define-public python-pingouin
   (package
     (name "python-pingouin")
-    (version "0.5.1")
+    (version "0.5.2")
     (source
      ;; The PyPI tarball does not contain the tests.
      (origin
@@ -846,7 +846,7 @@ of Pandas
        (file-name (git-file-name name version))
        (sha256
         (base32
-         "10v3mwcmyc7rd2957cbmfcw66yw2y0fz7zcfyx46q8slbmd1d8d4"))))
+         "0czy7cpn6xx9fs6wbz6rq2lpkb1a89bzxj1anf2f9in1m5qyrh83"))))
     (build-system python-build-system)
     (arguments
      `(#:phases
@@ -857,7 +857,7 @@ of Pandas
          (add-after 'unpack 'remove-outdated-check
            (lambda _
              (substitute* "setup.py"
-               (("'outdated',") ""))
+               (("\"outdated\",") ""))
              (substitute* "pingouin/__init__.py"
                (("^from outdated[^\n]*") "")
                (("^warn_if_outdated[^\n]*") ""))))
@@ -1226,7 +1226,7 @@ aggregated sum and more.")
 (define-public python-pyvista
   (package
     (name "python-pyvista")
-    (version "0.35.2")
+    (version "0.36.1")
     (source
      ;; The PyPI tarball does not contain the tests.
      ;; (However, we don't yet actually run the tests.)
@@ -1237,7 +1237,7 @@ aggregated sum and more.")
              (commit (string-append "v" version))))
        (file-name (git-file-name name version))
        (sha256
-        (base32 "1qmxrhqm3ag736yb761jy1himwlr3p676xyqbry61h97dj11n6sq"))))
+        (base32 "1kjilcrz2cyh67n79r8dpxrans99mlviz2whc6g7j8hgn7v14z2n"))))
     (build-system python-build-system)
     (propagated-inputs
      (list python-appdirs
@@ -1478,3 +1478,9 @@ Dask, PyTorch, Tensorflow, CuPy, Sparse, Theano, JAX, and Autograd arrays as
 well as potentially any library which conforms to a standard API. See the
 documentation for more information.")
     (license license:expat)))
+
+;;;
+;;; Avoid adding new packages to the end of this file. To reduce the chances
+;;; of a merge conflict, place them above by existing packages with similar
+;;; functionality or similar names.
+;;;

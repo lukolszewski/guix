@@ -24,7 +24,7 @@
 ;;; Copyright © 2020 Reza Alizadeh Majd <r.majd@pantherx.org>
 ;;; Copyright © 2020 Jonathan Brielmaier <jonathan.brielmaier@web.de>
 ;;; Copyright © 2020 Mason Hock <chaosmonk@riseup.net>
-;;; Copyright © 2020, 2021 Michael Rohleder <mike@rohleder.de>
+;;; Copyright © 2020, 2021, 2022 Michael Rohleder <mike@rohleder.de>
 ;;; Copyright © 2020, 2022 Raghav Gururajan <rg@raghavgururajan.name>
 ;;; Copyright © 2020, 2021 Robert Karszniewicz <avoidr@posteo.de>
 ;;; Copyright © 2020 Giacomo Leidi <goodoldpaul@autistici.org>
@@ -35,6 +35,7 @@
 ;;; Copyright © 2022 Ricardo Wurmus <rekado@elephly.net>
 ;;; Copyright © 2022 Jai Vetrivelan <jaivetrivelan@gmail.com>
 ;;; Copyright © 2022 Jack Hill <jackhill@jackhill.us>
+;;; Copyright © 2022 Maxim Cournoyer <maxim.cournoyer@gmail.com>
 ;;;
 ;;; This file is part of GNU Guix.
 ;;;
@@ -103,7 +104,6 @@
   #:use-module (gnu packages man)
   #:use-module (gnu packages markup)
   #:use-module (gnu packages matrix)
-  #:use-module (gnu packages mono)
   #:use-module (gnu packages mpd)
   #:use-module (gnu packages ncurses)
   #:use-module (gnu packages networking)
@@ -998,7 +998,6 @@ authentication.")
        ("libxslt" ,libxslt)
        ;; ("libzephyr" ,libzephyr)
        ("meanwhile" ,meanwhile)
-       ("mono" ,mono)
        ("ncurses" ,ncurses)
        ("network-manager" ,network-manager)
        ("nspr" ,nspr)
@@ -1023,7 +1022,6 @@ authentication.")
         "--disable-gtkspell"
         "--disable-gevolution"
         "--enable-cap"
-        "--enable-mono"
         "--enable-cyrus-sasl"
         (string-append "--with-ncurses-headers="
                        (assoc-ref %build-inputs "ncurses")
@@ -2340,7 +2338,7 @@ QMatrixClient project.")
 (define-public mtxclient
   (package
     (name "mtxclient")
-    (version "0.8.0")
+    (version "0.8.2")
     (source
      (origin
        (method git-fetch)
@@ -2349,7 +2347,7 @@ QMatrixClient project.")
              (commit (string-append "v" version))))
        (file-name (git-file-name name version))
        (sha256
-        (base32 "0gkzgq6rzanvgyk47d25nqz7m0lwa3kz5pc0m4w0ada38xwhy2j9"))))
+        (base32 "041ckjvfxapv1q6x9xd8q70x43cz10x7p11aql58lnc0jp0kwry7"))))
     (arguments
      `(#:configure-flags
        (list
@@ -2385,7 +2383,7 @@ for the Matrix protocol.  It is built on to of @code{Boost.Asio}.")
 (define-public nheko
   (package
     (name "nheko")
-    (version "0.10.0")
+    (version "0.10.1")
     (source
      (origin
        (method git-fetch)
@@ -2394,7 +2392,7 @@ for the Matrix protocol.  It is built on to of @code{Boost.Asio}.")
              (commit (string-append "v" version))))
        (file-name (git-file-name name version))
        (sha256
-        (base32 "1n7czmv8mamaphpr2cnppddpgmb914pjd7msxng0fim6w7bhil14"))
+        (base32 "0a3wvv7vzh60hvyzy6776v6wa9d6n020684dqbcl4dw608mf4ahk"))
        (modules '((guix build utils)))
        (snippet
         '(begin
@@ -2653,31 +2651,30 @@ replacement.")
 (define-public tdlib
   (package
     (name "tdlib")
-    (version "1.8.0")
+    (version "1.8.4")
     (source
      (origin
        (method git-fetch)
        (uri (git-reference
              (url "https://github.com/tdlib/td")
-             (commit (string-append "v" version))))
+             (commit "7eabd8ca60de025e45e99d4e5edd39f4ebd9467e")))
        (sha256
-        (base32 "19psqpyh9a2kzfdhgqkirpif4x8pzy89phvi59dq155y30a3661q"))
+        (base32 "1chs0ibghjj275v9arsn3k68ppblpm7ysqk0za9kya5vdnldlld5"))
        (file-name (git-file-name name version))))
     (build-system cmake-build-system)
     (arguments
-     `(#:configure-flags
-       (list "-DCMAKE_BUILD_TYPE=Release"
-             "-DTD_ENABLE_LTO=OFF")     ; FIXME: Get LTO to work.
-       #:phases
-       (modify-phases %standard-phases
-         (add-after 'unpack 'remove-failing-tests
-           (lambda _
-             (substitute* "test/CMakeLists.txt"
-               ;; The test cases are compiled into a distinct binary
-               ;; which uses mtproto.cpp to attempt to connect to
-               ;; a remote server. Removing this file from the sources
-               ;; list disables those specific test cases.
-               (("\\$\\{CMAKE_CURRENT_SOURCE_DIR\\}/mtproto.cpp") "")))))))
+     (list
+      #:build-type "Release"
+      #:phases
+      #~(modify-phases %standard-phases
+          (add-after 'unpack 'remove-failing-tests
+            (lambda _
+              (substitute* "test/CMakeLists.txt"
+                ;; The test cases are compiled into a distinct binary
+                ;; which uses mtproto.cpp to attempt to connect to
+                ;; a remote server. Removing this file from the sources
+                ;; list disables those specific test cases.
+                (("\\$\\{CMAKE_CURRENT_SOURCE_DIR\\}/mtproto.cpp") "")))))))
     (native-inputs
      (list gperf openssl zlib php doxygen))
     (synopsis "Cross-platform library for building Telegram clients")
@@ -2900,6 +2897,36 @@ as phones, embedded computers or microcontrollers.")
     (home-page "https://mosquitto.org/")
     ;; Dual licensed.
     (license (list license:epl1.0 license:edl1.0))))
+
+(define-public python-paho-mqtt
+  (package
+    (name "python-paho-mqtt")
+    (version "1.6.1")
+    (source (origin
+              (method git-fetch)        ;for tests
+              (uri (git-reference
+                    (url "https://github.com/eclipse/paho.mqtt.python")
+                    (commit (string-append "v" version))))
+              (file-name (git-file-name name version))
+              (sha256
+               (base32
+                "0679iafabd3kvk4fj4lvcl14zg82yq5pz5rji4z659lm2g2zlwgn"))))
+    (build-system python-build-system)
+    (arguments (list #:phases
+                     #~(modify-phases %standard-phases
+                         (replace 'check
+                           (lambda* (#:key tests? #:allow-other-keys)
+                             (when tests?
+                               (invoke "pytest" "-vv")))))))
+    (native-inputs (list python-pytest))
+    (home-page "https://www.eclipse.org/paho/")
+    (synopsis "Python implementation of an MQTT client class")
+    (description "MQTT and MQTT-SN are lightweight publish/subscribe messaging
+transports for TCP/IP and connection-less protocols (such as UDP).  The
+Eclipse Paho project provides client side implementations of MQTT and MQTT-SN
+in a variety of programming languages.  This package is for the Python
+implementation of an MQTT version client class.")
+    (license (list license:epl2.0 license:edl1.0)))) ;dual licensed
 
 (define-public movim-desktop
   (let ((commit "83d583b83629dbd2ec448da9a1ffd81f6c1fb295")
